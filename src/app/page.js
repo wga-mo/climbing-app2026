@@ -2,6 +2,7 @@
 
 import { useFilters } from "@/context/FiltersContext";
 import { useCrags } from "@/hooks/useCrags";
+import { useState } from "react";
 import FiltersSidebar from "@/components/FiltersSidebar";
 import MainTable from "@/components/MainTable";
 
@@ -14,6 +15,17 @@ const MapView = dynamic(() => import("@/components/MapView"), {
 export default function HomePage() {
   const { filters, setFilters } = useFilters();
   const { crags, loading } = useCrags(filters);
+  const [activeCragId, setActiveCragId] = useState(null);
+  const markers = crags
+  .filter(crag => crag.loc_lat && crag.loc_long)
+  .map(crag => ({
+    id: crag.crag_id,
+    label: crag.crag_name,
+    lat: crag.loc_lat,
+    lng: crag.loc_long,
+    type: "crag",
+    href: `/details/${crag.crag_id}`,
+  }));
 
   return (
     <main className="flex flex-1 overflow-hidden">
@@ -26,11 +38,18 @@ export default function HomePage() {
         <MainTable
           crags={crags}
           loading={loading}
+          activeCragId={activeCragId}
+          setActiveCragId={setActiveCragId}
         />
       </section>
 
       <section className="w-[45%] min-w-[500px] border-l p-4">
-        <MapView crags={crags} />
+        <MapView 
+          markers={markers}
+          activeMarkerId={activeCragId}
+          setActiveMarkerId={setActiveCragId} 
+        />
+        
       </section>
     </main>
   );

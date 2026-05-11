@@ -1,53 +1,41 @@
-import Link from "next/link";
+'use client';
 
-export default function MainTable({ crags, loading }) {
-  if (loading) {
-    return (
-      <>
-        <h1 className="text-3xl font-bold">Climbing Database</h1>
-        <p className="mt-6">Loading crags...</p>
-      </>
-    );
-  }
+import { useRouter } from "next/navigation";
 
-  if (!crags.length) {
-    return (
-      <>
-        <h1 className="text-3xl font-bold">Climbing Database</h1>
-        <p className="mt-6">No crags found.</p>
-      </>
-    );
-  }
+export default function MainTable({ crags, loading, activeCragId, setActiveCragId }) {
+  const router = useRouter();
+
+  if (loading) return <p>Loading crags...</p>;
+  if (!crags.length) return <p>No crags found.</p>;
 
   return (
-    <>
-      <h1 className="text-3xl font-bold">Climbing Database</h1>
+    <div className="overflow-auto">
+      <table className="w-full border border-gray-300">
+        <thead className="bg-gray-100">
+          <tr>
+            <th className="border px-3 py-2 text-left">Crag</th>
+          </tr>
+        </thead>
 
-      <p className="mt-2 text-gray-600">
-        Showing {crags.length} crags from Supabase.
-      </p>
-
-      <div className="mt-6 overflow-auto">
-        <table className="w-full border border-gray-300">
-          <thead className="bg-gray-100">
-            <tr>
-              <th className="border px-3 py-2 text-left">Crag</th>
+        <tbody>
+          {crags.map(crag => (
+            <tr
+              key={crag.crag_id}
+              onClick={() => router.push(`/details/${crag.crag_id}`)}
+              onMouseEnter={() => setActiveCragId(crag.crag_id)}
+              onMouseLeave={() => setActiveCragId(null)}
+              className={`
+                cursor-pointer hover:bg-gray-100
+                ${activeCragId === crag.crag_id ? "bg-blue-50" : ""}
+              `}
+            >
+              <td className="border px-3 py-2 font-medium">
+                {crag.crag_name}
+              </td>
             </tr>
-          </thead>
-
-          <tbody>
-            {crags.map(crag => (
-              <tr key={crag.crag_id} className="hover:bg-gray-50 cursor-pointer">
-                <td className="border px-3 py-2 font-medium">
-                  <Link href={`/details/${crag.crag_id}`}>
-                    {crag.crag_name}
-                  </Link>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </>
+          ))}
+        </tbody>
+      </table>
+    </div>
   );
 }
