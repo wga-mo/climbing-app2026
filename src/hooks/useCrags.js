@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 
-export function useCrags() {
+export function useCrags(filters) {
   const [crags, setCrags] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -9,7 +9,7 @@ export function useCrags() {
     async function fetchCrags() {
       setLoading(true);
 
-      const { data, error } = await supabase
+      let query = supabase
         .from("crags")
         .select(`
           crag_id,
@@ -22,6 +22,14 @@ export function useCrags() {
         `)
         .order("crag_name");
 
+      if (filters.region !== "all") {
+        query = query.eq("region", filters.region);
+      }
+
+      query = query.lte("driving_time", filters.maxDrivingTime);
+
+      const { data, error } = await query;
+
       if (error) {
         console.error("Error fetching crags:", error);
         setCrags([]);
@@ -33,10 +41,7 @@ export function useCrags() {
     }
 
     fetchCrags();
-  }, []);
+  }, [filters]);
 
-  return {
-    crags,
-    loading,
-  };
+  return { crags, loading };
 }
