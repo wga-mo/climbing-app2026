@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export default function MainTable({ crags, loading }) {
   if (loading) {
     return (
@@ -39,9 +41,11 @@ export default function MainTable({ crags, loading }) {
 
           <tbody>
             {crags.map(crag => (
-              <tr key={crag.crag_id} className="hover:bg-gray-50">
+              <tr key={crag.crag_id} className="hover:bg-gray-50 cursor-pointer">
                 <td className="border px-3 py-2 font-medium">
-                  {crag.crag_name}
+                  <Link href={`/details/${crag.crag_id}`}>
+                    {crag.crag_name}
+                  </Link>
                 </td>
                 <td className="border px-3 py-2">{crag.area}</td>
                 <td className="border px-3 py-2">{crag.region}</td>
