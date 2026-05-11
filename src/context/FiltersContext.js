@@ -6,8 +6,23 @@ const FiltersContext = createContext(null);
 
 export function FiltersProvider({ children }) {
   const [filters, setFilters] = useState({
-    region: "all",
-    maxDrivingTime: 120,
+    globalFilter: true,
+
+    sport: true,
+    trad: false,
+    boulder: false,
+
+    gradeMin: 8,
+    gradeMax: 21,
+
+    p_s: true,
+    p_m: false,
+
+    d_time: 120,
+    w_time: 45,
+
+    oslo: true,
+    bergen: false,
   });
 
   return (

@@ -14,6 +14,13 @@ export default function MainTable({ crags, loading, activeCragId, setActiveCragI
         <thead className="bg-gray-100">
           <tr>
             <th className="border px-3 py-2 text-left">Crag</th>
+            <th className="border px-3 py-2 text-right">Total</th>
+            <th className="border px-3 py-2 text-right">&lt;5</th>
+            <th className="border px-3 py-2 text-right">5</th>
+            <th className="border px-3 py-2 text-right">6</th>
+            <th className="border px-3 py-2 text-right">7</th>
+            <th className="border px-3 py-2 text-right">8</th>
+            <th className="border px-3 py-2 text-right">&gt;8</th>
           </tr>
         </thead>
 
@@ -32,6 +39,13 @@ export default function MainTable({ crags, loading, activeCragId, setActiveCragI
               <td className="border px-3 py-2 font-medium">
                 {crag.crag_name}
               </td>
+              <td className="border px-3 py-2 text-right">{crag.total_routes}</td>
+              <td className="border px-3 py-2 text-right">{crag.range1}</td>
+              <td className="border px-3 py-2 text-right">{crag.range2}</td>
+              <td className="border px-3 py-2 text-right">{crag.range3}</td>
+              <td className="border px-3 py-2 text-right">{crag.range4}</td>
+              <td className="border px-3 py-2 text-right">{crag.range5}</td>
+              <td className="border px-3 py-2 text-right">{crag.range6}</td>
             </tr>
           ))}
         </tbody>
