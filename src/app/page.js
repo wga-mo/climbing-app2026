@@ -1,16 +1,12 @@
 'use client';
 
-import { useState } from "react";
+import { useFilters } from "@/context/FiltersContext";
 import { useCrags } from "@/hooks/useCrags";
 import FiltersSidebar from "@/components/FiltersSidebar";
 import MainTable from "@/components/MainTable";
 
 export default function HomePage() {
-  const [filters, setFilters] = useState({
-    region: "all",
-    maxDrivingTime: 120,
-  });
-
+  const { filters, setFilters } = useFilters();
   const { crags, loading } = useCrags(filters);
 
   return (
