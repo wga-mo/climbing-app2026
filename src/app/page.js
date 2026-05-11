@@ -2,12 +2,21 @@
 
 import { useState } from "react";
 import FiltersColumn from "@/components/FiltersColumn";
+import { crags } from "@/data/crags";
 
 export default function HomePage() {
   const [filters, setFilters] = useState({
     sport: true,
     trad: false,
     boulder: false,
+  });
+
+  const filteredCrags = crags.filter(crag => {
+  if (filters.sport && crag.sport) return true;
+  if (filters.trad && crag.trad) return true;
+  if (filters.boulder && crag.boulder) return true;
+
+  return false;
   });
 
   return (
@@ -18,16 +27,23 @@ export default function HomePage() {
       />
 
       <section className="flex-1 p-4">
-        <h1 className="text-3xl font-bold">
-          Climbing Database
-        </h1>
+  <h1 className="text-3xl font-bold">
+    Climbing Database
+  </h1>
 
-        <div className="mt-6">
-          <p>Sport: {filters.sport ? "yes" : "no"}</p>
-          <p>Trad: {filters.trad ? "yes" : "no"}</p>
-          <p>Boulder: {filters.boulder ? "yes" : "no"}</p>
-        </div>
-      </section>
+  <div className="mt-6 space-y-2">
+
+    {filteredCrags.map(crag => (
+      <div
+        key={crag.id}
+        className="rounded border p-3"
+      >
+        {crag.name}
+      </div>
+    ))}
+
+  </div>
+</section>
     </main>
   );
 }
