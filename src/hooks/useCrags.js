@@ -14,11 +14,11 @@ export function useCrags(filters) {
         .select(`
           crag_id,
           crag_name,
-          country,
           region,
-          area,
           driving_time,
-          walking_time
+          walking_time,
+          loc_lat,
+          loc_long
         `)
         .order("crag_name");
 

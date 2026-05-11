@@ -32,10 +32,6 @@ export default function MainTable({ crags, loading }) {
           <thead className="bg-gray-100">
             <tr>
               <th className="border px-3 py-2 text-left">Crag</th>
-              <th className="border px-3 py-2 text-left">Area</th>
-              <th className="border px-3 py-2 text-left">Region</th>
-              <th className="border px-3 py-2 text-right">Drive</th>
-              <th className="border px-3 py-2 text-right">Walk</th>
             </tr>
           </thead>
 
@@ -46,14 +42,6 @@ export default function MainTable({ crags, loading }) {
                   <Link href={`/details/${crag.crag_id}`}>
                     {crag.crag_name}
                   </Link>
-                </td>
-                <td className="border px-3 py-2">{crag.area}</td>
-                <td className="border px-3 py-2">{crag.region}</td>
-                <td className="border px-3 py-2 text-right">
-                  {crag.driving_time} min
-                </td>
-                <td className="border px-3 py-2 text-right">
-                  {crag.walking_time} min
                 </td>
               </tr>
             ))}
