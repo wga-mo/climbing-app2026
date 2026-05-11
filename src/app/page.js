@@ -3,6 +3,7 @@
 import { useState } from "react";
 import FiltersColumn from "@/components/FiltersColumn";
 import { crags } from "@/data/crags";
+import CragCard from "@/components/CragCard";
 
 export default function HomePage() {
   const [filters, setFilters] = useState({
@@ -34,12 +35,10 @@ export default function HomePage() {
   <div className="mt-6 space-y-2">
 
     {filteredCrags.map(crag => (
-      <div
-        key={crag.id}
-        className="rounded border p-3"
-      >
-        {crag.name}
-      </div>
+      <CragCard
+    key={crag.id}
+    crag={crag}
+  />
     ))}
 
   </div>
