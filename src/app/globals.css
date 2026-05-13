@@ -34,3 +34,53 @@ body {
 .leaflet-container img {
   max-width: none;
 }
+
+.range-thumb::-webkit-slider-thumb {
+  pointer-events: auto;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 9999px;
+  background: black;
+  cursor: pointer;
+}
+
+.range-thumb::-moz-range-thumb {
+  pointer-events: auto;
+  width: 14px;
+  height: 14px;
+  border: none;
+  border-radius: 9999px;
+  background: black;
+  cursor: pointer;
+}
+
+.black-slider {
+  appearance: none;
+  -webkit-appearance: none;
+  background: transparent;
+}
+
+
+
+.black-slider::-webkit-slider-thumb {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 9999px;
+  background: black;
+  cursor: pointer;
+}
+
+
+
+.black-slider::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border: none;
+  border-radius: 9999px;
+  background: black;
+  cursor: pointer;
+}
+
