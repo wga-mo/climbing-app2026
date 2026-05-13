@@ -235,7 +235,8 @@ export default function FiltersSidebar({ filters, setFilters }) {
   />
 </div>
       </section>
-
+      </div>
+      
       {/* Region filter */}
       <section className="mt-3">
         <h3 className="text-xl font-semibold">Area</h3>
@@ -260,7 +261,7 @@ export default function FiltersSidebar({ filters, setFilters }) {
           Bergen
         </label>
       </section>
-      </div>
+      
     </aside>
   );
 }
