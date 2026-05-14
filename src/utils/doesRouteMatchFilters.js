@@ -1,4 +1,9 @@
 export function doesRouteMatchFilters(route, filters) {
+
+  if (!filters.globalFilter) {
+    return true;
+  }
+  
   const styleMatch =
     (filters.sport && route.style === "sport") ||
     (filters.trad &&
