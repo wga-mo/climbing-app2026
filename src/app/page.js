@@ -13,7 +13,7 @@ const MapView = dynamic(() => import("@/components/MapView"), {
 });
 
 export default function HomePage() {
-  const { filters, setFilters } = useFilters();
+  const { filters, setFilters, activeMobileView, setActiveMobileView, mobileFiltersVisible, } = useFilters();
   const { crags, loading } = useCrags(filters);
   const [activeCragId, setActiveCragId] = useState(null);
   const markers = crags
@@ -28,7 +28,9 @@ export default function HomePage() {
   }));
 
   return (
-    <main className="flex flex-1 overflow-hidden">
+  <>
+    {/* Desktop layout */}
+    <main className="hidden lg:flex flex-1 overflow-hidden">
       <FiltersSidebar
         filters={filters}
         setFilters={setFilters}
@@ -44,13 +46,54 @@ export default function HomePage() {
       </section>
 
       <section className="w-[45%] min-w-[500px] border-l p-4">
-        <MapView 
+        <MapView
           markers={markers}
           activeMarkerId={activeCragId}
-          setActiveMarkerId={setActiveCragId} 
+          setActiveMarkerId={setActiveCragId}
         />
-        
       </section>
     </main>
-  );
+
+    {/* Mobile layout */}
+    <main className="flex flex-1 lg:hidden">
+      {mobileFiltersVisible ? (
+        <FiltersSidebar
+          filters={filters}
+          setFilters={setFilters}
+        />
+      ) : activeMobileView === "table" ? (
+        <section className="flex-1 overflow-auto p-4">
+          <MainTable
+            crags={crags}
+            loading={loading}
+            activeCragId={activeCragId}
+            setActiveCragId={setActiveCragId}
+          />
+        </section>
+      ) : (
+        <section className="flex-1 p-4">
+          <MapView
+            markers={markers}
+            activeMarkerId={activeCragId}
+            setActiveMarkerId={setActiveCragId}
+          />
+        </section>
+      )}
+    </main>
+
+    {/* Mobile table/map toggle */}
+    {!mobileFiltersVisible && (
+      <button
+        onClick={() =>
+          setActiveMobileView(prev =>
+            prev === "table" ? "map" : "table"
+          )
+        }
+        className="fixed bottom-4 left-1/2 z-[9999] -translate-x-1/2 rounded-full bg-white px-4 py-2 shadow lg:hidden"
+      >
+        {activeMobileView === "table" ? "Show map" : "Show table"}
+      </button>
+    )}
+  </>
+);
 }
