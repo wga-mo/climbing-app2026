@@ -1,7 +1,8 @@
 import { supabase } from "@/lib/supabase";
-import FiltersSidebar from "@/components/FiltersSidebar";
 import DetailsClientLayout from "@/components/DetailsClientLayout";
 import SectorList from "@/components/SectorList";
+import SectorRouteTables from "@/components/SectorRouteTables";
+
 
 export default async function CragDetailsPage({ params }) {
     const { crag_id } = await params;
@@ -62,6 +63,7 @@ const { data: routes } = await supabase
     length,
     style,
     pitches,
+    nr_in_picture,
     sector_id,
     sector,
     sector_name
@@ -117,7 +119,10 @@ const { data: routes } = await supabase
 
     <SectorList sectors={sectors} />
 
+    <SectorRouteTables sectors={sectors} routes={routes} />
 
     </DetailsClientLayout>
+    
+    
   );
 }
