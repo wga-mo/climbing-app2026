@@ -1,8 +1,10 @@
 import { gradeConversion } from "@/utils/gradeConversion";
+import { useFilters } from "@/context/FiltersContext";
 
-export default function FiltersSidebar({ filters, setFilters }) {
+export default function FiltersSidebar({ filters, setFilters, mobile = false, }) {
 
   const filtersDisabled = !filters.globalFilter;
+  const { setMobileFiltersVisible } = useFilters();
 
   function handleCheckboxChange(event) {
     const { name, checked } = event.target;
@@ -41,9 +43,25 @@ export default function FiltersSidebar({ filters, setFilters }) {
   }
 
   return (
-    <aside className="w-64 shrink-0 border-r bg-gray-50 p-3 overflow-auto">
+    <aside 
+      className={
+        mobile
+          ? "fixed inset-0 z-[9999] overflow-auto bg-white p-4"
+          : "w-64 shrink-0 overflow-auto border-r bg-gray-50 p-3"
+      }>
+      
+      
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-semibold">Filters</h2>
+
+        {mobile && (
+  <button
+    onClick={() => setMobileFiltersVisible(false)}
+    className="mb-4 rounded border px-3 py-1 text-sm"
+  >
+    Close filters
+  </button>
+)}
 
         <label className="relative inline-flex cursor-pointer items-center">
           <input

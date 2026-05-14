@@ -56,12 +56,7 @@ export default function HomePage() {
 
     {/* Mobile layout */}
     <main className="flex flex-1 lg:hidden">
-      {mobileFiltersVisible ? (
-        <FiltersSidebar
-          filters={filters}
-          setFilters={setFilters}
-        />
-      ) : activeMobileView === "table" ? (
+      {activeMobileView === "table" ? (
         <section className="flex-1 overflow-auto p-4">
           <MainTable
             crags={crags}

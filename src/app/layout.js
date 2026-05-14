@@ -1,6 +1,7 @@
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 import { FiltersProvider } from "@/context/FiltersContext";
+import MobileFiltersOverlay from "@/components/MobileFiltersOverlay";
 
 export default function RootLayout({ children }) {
   return (
@@ -8,6 +9,7 @@ export default function RootLayout({ children }) {
       <body className="min-h-screen flex flex-col">
         <FiltersProvider>
           <Navbar />
+          <MobileFiltersOverlay />
           {children}
         </FiltersProvider>
       </body>
