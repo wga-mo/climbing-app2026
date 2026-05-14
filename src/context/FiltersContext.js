@@ -5,6 +5,10 @@ import { createContext, useContext, useState } from "react";
 const FiltersContext = createContext(null);
 
 export function FiltersProvider({ children }) {
+  const [activeMobileView, setActiveMobileView] = useState("table");
+  const [mobileFiltersVisible, setMobileFiltersVisible] = useState(false);
+  const [previousMobileView, setPreviousMobileView] = useState("table");
+
   const [filters, setFilters] = useState({
     globalFilter: true,
 
@@ -26,7 +30,12 @@ export function FiltersProvider({ children }) {
   });
 
   return (
-    <FiltersContext.Provider value={{ filters, setFilters }}>
+    <FiltersContext.Provider value={{ 
+      filters, setFilters,
+      activeMobileView, setActiveMobileView,
+      mobileFiltersVisible, setMobileFiltersVisible,
+      previousMobileView, setPreviousMobileView,
+       }}>
       {children}
     </FiltersContext.Provider>
   );
