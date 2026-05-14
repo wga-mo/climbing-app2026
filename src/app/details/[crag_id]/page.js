@@ -1,4 +1,6 @@
 import { supabase } from "@/lib/supabase";
+import FiltersSidebar from "@/components/FiltersSidebar";
+import DetailsClientLayout from "@/components/DetailsClientLayout";
 
 export default async function CragDetailsPage({ params }) {
     const { crag_id } = await params;
@@ -21,17 +23,16 @@ export default async function CragDetailsPage({ params }) {
 
   if (error || !crag) {
     return (
-      <main className="p-4">
+      <DetailsClientLayout>
         <h1 className="text-2xl font-bold">
           Crag not found
         </h1>
-      </main>
+      </DetailsClientLayout>
     );
   }
 
   return (
-    <main className="p-4">
-
+    <DetailsClientLayout>
       <h1 className="text-3xl font-bold">
         {crag.crag_name}
       </h1>
@@ -65,7 +66,6 @@ export default async function CragDetailsPage({ params }) {
           {crag.description}
         </p>
       </div>
-
-    </main>
+    </DetailsClientLayout>
   );
 }
