@@ -11,6 +11,12 @@ export default function CragOverview({
     { ssr: false }
   );
 
+  function formatValue(value) {
+    if (value === 1) return "yes";
+    if (value === -1) return "no";
+    return "?";
+    }
+
   const detailMarkers = [
     {
         id: `crag-${crag.crag_id}`,
@@ -28,6 +34,14 @@ export default function CragOverview({
     },
   ].filter(marker => marker.lat && marker.lng);
 
+  const items = [
+    { icon: "🚗", value: `${crag.driving_time} min`, tooltip: `Driving time from ${crag.region}` },
+    { icon: "🚶", value: `${crag.walking_time} min`, tooltip: `Walking time` },
+    { icon: "☂️", value: formatValue(crag.rainproof), tooltip: `Rainproof` },
+    { icon: "⛺", value: formatValue(crag.campsite), tooltip: `Campsite` },
+    { icon: "🏝️", value: formatValue(crag.bathing), tooltip: `Bathing` },
+    { icon: "🚌", value: formatValue(crag.buss_friendly), tooltip: `Bus friendly` },
+  ];
 
   return (
     <section className="grid items-strech gap-4 lg:grid-cols-2">
@@ -38,30 +52,16 @@ export default function CragOverview({
           {crag.crag_name}
         </h1>
 
-        <p className="mt-2 text-gray-600">
-          {crag.area}, {crag.region}
-        </p>
-
-
-        <div className="mt-6 space-y-2 text-sm">
-          <p>
-            <strong>Sectors:</strong> {sectors.length}
-          </p>
-
-          <p>
-            <strong>Routes:</strong> {routes.length}
-          </p>
-
-          <p>
-            <strong>Driving time:</strong>{" "}
-            {crag.driving_time} min
-          </p>
-
-          <p>
-            <strong>Walking time:</strong>{" "}
-            {crag.walking_time} min
-          </p>
-        </div>
+        <div className="mt-4 border-y">
+            <div className="grid grid-cols-6 text-center">
+                {items.map(item => (
+                <div key={item.icon} className="py-2" title={item.tooltip}>
+                    <div className="text-2xl">{item.icon}</div>
+                    <div className="mt-2 text-sm">{item.value}</div>
+                </div>
+                ))}
+            </div>
+            </div>
 
         <div className="mt-6">
             <h2 className="text-xl font-semibold">
@@ -73,16 +73,17 @@ export default function CragOverview({
             </p>
         </div>
 
-        <div className="mt-6">
-            <h2 className="text-xl font-semibold">
-            Approach
-            </h2>
+        {crag.approach && (
+            <div className="mt-6">
+                <h2 className="text-xl font-semibold">
+                Approach
+                </h2>
 
-            <p className="mt-2 whitespace-pre-line">
-            {crag.approach}
-            </p>
-        </div>
-
+                <p className="mt-2 whitespace-pre-line">
+                {crag.approach}
+                </p>
+            </div>
+ )}
         {children}
       </div>
 

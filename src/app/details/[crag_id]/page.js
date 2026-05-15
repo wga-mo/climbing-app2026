@@ -21,7 +21,11 @@ export default async function CragDetailsPage({ params }) {
       loc_lat,
       loc_long,
       par_lat,
-      par_long
+      par_long,
+      rainproof,
+      bathing,
+      campsite,
+      buss_friendly
     `)
     .eq("crag_id", crag_id)
     .single();
