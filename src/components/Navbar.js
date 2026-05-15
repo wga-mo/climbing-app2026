@@ -1,19 +1,57 @@
 'use client';
 
 import { useFilters } from "@/context/FiltersContext";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { supabase } from "@/lib/supabase";
 
 export default function Navbar() {
+  
   const {
     filters,
     setFilters,
     setMobileFiltersVisible,
   } = useFilters();
 
+  //Auth-profile related
+  const router = useRouter();
+  const [user, setUser] = useState(null);
+
   function toggleGlobalFilter() {
     setFilters(prev => ({
       ...prev,
       globalFilter: !prev.globalFilter,
     }));
+  }
+
+  useEffect(() => {
+  async function getUser() {
+    const { data } =
+      await supabase.auth.getUser();
+
+    setUser(data.user);
+  }
+
+  getUser();
+
+  const {
+    data: { subscription },
+  } = supabase.auth.onAuthStateChange(
+    (_event, session) => {
+      setUser(session?.user ?? null);
+    }
+  );
+
+  return () =>
+    subscription.unsubscribe();
+  }, []);
+
+  async function handleLogout() {
+    await supabase.auth.signOut();
+
+    router.push("/login");
+    router.refresh();
   }
 
   return (
@@ -43,9 +81,24 @@ export default function Navbar() {
           </label>
         </div>
 
-        <button className="hidden rounded-md border px-3 py-1 text-sm lg:block">
-          Menu
-        </button>
+        <div className="hidden lg:block">
+          {user ? (
+            <button
+              onClick={handleLogout}
+              className="rounded-md border px-3 py-1 text-sm"
+            >
+              Log out
+            </button>
+          ) : (
+            <Link
+              href="/login"
+              className="rounded-md border px-3 py-1 text-sm"
+            >
+              Log in
+            </Link>
+          )}
+        </div>
+        
       </nav>
     </header>
   );
