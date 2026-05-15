@@ -52,7 +52,8 @@ export default async function CragDetailsPage({ params }) {
     walking_time,
     approach,
     link,
-    comment
+    comment,
+    sector_in_crag
   `)
   .eq("crag_id", crag_id)
   .order("sector_id");
