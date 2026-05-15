@@ -1,10 +1,12 @@
 'use client';
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 
 export default function SectorTopo({ sector }) {
   const [open, setOpen] = useState(false);
+  const [imageUrl, setImageUrl] = useState(null);
+  const [errorMessage, setErrorMessage] = useState("");
 
   if (!sector.sector_in_crag) {
     return (
@@ -14,20 +16,49 @@ export default function SectorTopo({ sector }) {
     );
   }
 
-  const url=`crags/${sector.crag_id}/sector-${sector.sector_in_crag}.png`
+  const topoPath = `crags/${sector.crag_id}/sector-${sector.sector_in_crag}.png`;
 
-console.log(url);
-  
-const { data } = supabase
-    .storage
-    .from("topos")
-    .getPublicUrl(url);
+  useEffect(() => {
+    async function loadTopo() {
+      setImageUrl(null);
+      setErrorMessage("");
 
-    console.log(data.publicUrl);
+      const { data, error } = await supabase.storage
+        .from("topos")
+        .createSignedUrl(topoPath, 60 * 60);
+
+      if (error) {
+        console.error("Error loading topo:", error);
+        setErrorMessage("Could not load topo.");
+        return;
+      }
+
+      setImageUrl(data.signedUrl);
+    }
+
+    loadTopo();
+  }, [topoPath]);
+
+  if (errorMessage) {
+    return (
+      <div className="flex h-[300px] items-center justify-center rounded bg-gray-100 text-gray-500">
+        {errorMessage}
+      </div>
+    );
+  }
+
+  if (!imageUrl) {
+    return (
+      <div className="flex h-[300px] items-center justify-center rounded bg-gray-100 text-gray-500">
+        Loading topo...
+      </div>
+    );
+  }
+
   return (
     <>
       <img
-        src={data.publicUrl}
+        src={imageUrl}
         alt={`${sector.name} topo`}
         className="w-full cursor-zoom-in rounded object-contain"
         onClick={() => setOpen(true)}
@@ -44,7 +75,7 @@ const { data } = supabase
 
           <div className="flex h-full items-center justify-center overflow-auto pt-10">
             <img
-              src={data.publicUrl}
+              src={imageUrl}
               alt={`${sector.name} topo enlarged`}
               className="max-h-none max-w-none rounded"
             />
