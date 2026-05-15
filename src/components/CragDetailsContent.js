@@ -5,11 +5,12 @@ import GradeHistogram from "@/components/GradeHistogram";
 import SectorRouteTables from "@/components/SectorRouteTables";
 import { useRouter } from "next/navigation";
 import CragOverview from "@/components/CragOverview";
+import GuidebooksList from "@/components/GuidebooksList";
 
-export default function CragDetailsContent({ crag, sectors, routes }) {
+export default function CragDetailsContent({ crag, sectors, routes, guidebooks }) {
   const { filters } = useFilters();
   const router = useRouter();
-
+  
   return (
     <>
       <button
@@ -24,12 +25,13 @@ export default function CragDetailsContent({ crag, sectors, routes }) {
         sectors={sectors}
         routes={routes}
       >
+        <GuidebooksList guidebooks={guidebooks} />
         <GradeHistogram
           routes={routes}
           filters={filters}
         />
       </CragOverview>
-      
+
       <SectorRouteTables
         sectors={sectors}
         routes={routes}

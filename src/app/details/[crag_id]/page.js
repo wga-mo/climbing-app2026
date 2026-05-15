@@ -75,12 +75,26 @@ const { data: routes } = await supabase
   .eq("crag_id", crag_id)
   .order("sector_id");
 
+  const { data: guidebooks } = await supabase
+    .from("link_crags_guidebooks")
+    .select(`
+      page,
+      primary_book,
+      guidebooks (
+        name
+      )
+    `)
+    .eq("crag_id", crag_id);
+
+    //console.log(guidebooks);
+    
   return (
     <DetailsClientLayout>
       <CragDetailsContent
         crag={crag}
         sectors={sectors}
         routes={routes}
+        guidebooks={guidebooks}
       />
     </DetailsClientLayout>
     
