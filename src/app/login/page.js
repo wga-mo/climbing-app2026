@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import { useEffect } from "react";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -14,6 +15,18 @@ export default function LoginPage() {
   const [errorMessage, setErrorMessage] =
     useState("");
 
+  useEffect(() => {
+    async function checkUser() {
+        const { data } =
+        await supabase.auth.getUser();
+
+        if (data.user) {
+        router.replace("/");
+        }
+    }
+
+  checkUser();
+}, [router]);
   async function handleLogin(e) {
     e.preventDefault();
 
