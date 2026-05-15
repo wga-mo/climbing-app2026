@@ -3,7 +3,7 @@ import DetailsClientLayout from "@/components/DetailsClientLayout";
 import CragDetailsContent from "@/components/CragDetailsContent";
 
 export default async function CragDetailsPage({ params }) {
-    const { crag_id } = await params;
+  const { crag_id } = await params;
 
   const { data: crag, error } = await supabase
     .from("crags")
@@ -17,7 +17,11 @@ export default async function CragDetailsPage({ params }) {
       approach,
       driving_time,
       walking_time,
-      steepness
+      steepness,
+      loc_lat,
+      loc_long,
+      par_lat,
+      par_long
     `)
     .eq("crag_id", crag_id)
     .single();
@@ -44,9 +48,7 @@ export default async function CragDetailsPage({ params }) {
     walking_time,
     approach,
     link,
-    comment,
-    loc_lat,
-    loc_long
+    comment
   `)
   .eq("crag_id", crag_id)
   .order("sector_id");
