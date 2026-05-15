@@ -1,4 +1,7 @@
 //copy of file before all supabase interaction was moved to a client component due to RLS
+//Better long-term fix ifølge KI
+//Use Supabase SSR auth helpers so server components receive the user session via cookies.
+//That is the proper Next.js + Supabase approach, but it is a bigger step.
 
 import { supabase } from "@/lib/supabase";
 import DetailsClientLayout from "@/components/DetailsClientLayout";

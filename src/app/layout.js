@@ -4,7 +4,7 @@ import { FiltersProvider } from "@/context/FiltersContext";
 import MobileFiltersOverlay from "@/components/MobileFiltersOverlay";
 import AuthGuard from "@/components/AuthGuard";
 
-{/*
+
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
@@ -20,7 +20,8 @@ export default function RootLayout({ children }) {
     </html>
   );
 }
-*/}
+
+{/*
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
@@ -34,3 +35,4 @@ export default function RootLayout({ children }) {
     </html>
   );
 }
+  */}
