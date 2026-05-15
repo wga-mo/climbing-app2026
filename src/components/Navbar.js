@@ -50,7 +50,7 @@ export default function Navbar() {
   async function handleLogout() {
     await supabase.auth.signOut();
 
-    router.push("/login");
+    router.push("/");
     router.refresh();
   }
 
@@ -58,7 +58,11 @@ export default function Navbar() {
     <header className="border-b bg-white">
       <nav className="flex h-14 items-center justify-between px-4">
         <div className="text-lg font-bold">
-          Climbing Database
+          <Link
+              href="/"
+            >
+              Climbing Database
+            </Link>
         </div>
 
         <div className="flex items-center gap-3 lg:hidden">

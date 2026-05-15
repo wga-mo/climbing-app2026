@@ -10,29 +10,11 @@ export default function RootLayout({ children }) {
     <html lang="en">
       <body className="min-h-screen flex flex-col">
         <FiltersProvider>
-          <AuthGuard>
-            <Navbar />
-            <MobileFiltersOverlay />
-            {children}
-          </AuthGuard>
+          <Navbar />
+          <MobileFiltersOverlay />
+          {children}
         </FiltersProvider>
       </body>
     </html>
   );
 }
-
-{/*
-export default function RootLayout({ children }) {
-  return (
-    <html lang="en">
-      <body className="min-h-screen flex flex-col">
-        <FiltersProvider> 
-            <Navbar />
-            <MobileFiltersOverlay />
-            {children}
-        </FiltersProvider>
-      </body>
-    </html>
-  );
-}
-  */}

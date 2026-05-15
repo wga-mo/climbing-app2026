@@ -8,37 +8,49 @@ export default function AuthGuard({ children }) {
   const router = useRouter();
   const pathname = usePathname();
 
-  const [loading, setLoading] = useState(true);
+  const [checkingAuth, setCheckingAuth] = useState(true);
+  const [allowed, setAllowed] = useState(false);
 
   useEffect(() => {
     async function checkUser() {
-      if (pathname === "/login") {
-        setLoading(false);
-        return;
-      }
-
       const { data } = await supabase.auth.getUser();
 
       if (!data.user) {
-        router.replace("/login");
+        setAllowed(false);
+        setCheckingAuth(false);
+
+        router.replace(
+          `/login?next=${encodeURIComponent(pathname)}`
+        );
+
         return;
       }
 
-      setLoading(false);
+      setAllowed(true);
+      setCheckingAuth(false);
     }
 
     checkUser();
   }, [router, pathname]);
 
-  if (pathname === "/login") {
-    return children;
+  if (checkingAuth) {
+    return (
+      <main className="flex min-h-[calc(100vh-3.5rem)] items-center justify-center p-8">
+        <p>Checking login...</p>
+      </main>
+    );
   }
 
-  if (loading) {
+  if (!allowed) {
     return (
-      <div className="flex flex-1 items-center justify-center">
-        Loading...
-      </div>
+      <main className="flex min-h-[calc(100vh-3.5rem)] items-center justify-center p-8">
+        <div className="text-center">
+          <p className="text-lg font-medium">Login required</p>
+          <p className="mt-2 text-sm text-gray-600">
+            Redirecting to login...
+          </p>
+        </div>
+      </main>
     );
   }
 

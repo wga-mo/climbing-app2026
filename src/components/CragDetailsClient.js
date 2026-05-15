@@ -15,7 +15,7 @@ export default function CragDetailsClient({ cragId }) {
   useEffect(() => {
     async function fetchDetails() {
       setLoading(true);
-
+        
       const { data: cragData, error: cragError } = await supabase
         .from("crags")
         .select(`
