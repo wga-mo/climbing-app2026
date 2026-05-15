@@ -28,10 +28,9 @@ export default function CragOverview({
     },
   ].filter(marker => marker.lat && marker.lng);
 
-  console.log(detailMarkers);
 
   return (
-    <section className="grid gap-4 lg:grid-cols-2">
+    <section className="grid items-strech gap-4 lg:grid-cols-2">
       
       {/* Left side: crag info */}
       <div className="rounded border p-4">
@@ -88,12 +87,12 @@ export default function CragOverview({
       </div>
 
       {/* Right side: map */}
-      <div className="rounded border p-4">
+      <div className="flex flex-col rounded border p-4">
         <h2 className="mb-3 text-xl font-semibold">
           Map
         </h2>
 
-        <div className="h-[300px] overflow-hidden rounded">
+        <div className="min-h-[300px] flex-1 overflow-hidden rounded">
           <MapView
             markers={detailMarkers}
             detailView
