@@ -51,7 +51,7 @@ export default function Navbar() {
   }
 
   return (
-    <header className="border-b bg-white">
+    <header className="sticky top-0 z-50 border-b bg-white shadow-sm">
       <nav className="flex h-14 items-center justify-between px-4">
         {/* Climing database */}
         <div className="text-lg font-bold">
