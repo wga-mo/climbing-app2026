@@ -2,7 +2,7 @@
 
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/context/AuthContext";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export default function AccountPage() {
   const [username, setUsername] = useState("");
@@ -13,7 +13,7 @@ export default function AccountPage() {
 
   async function saveUsername(e) {
     e.preventDefault();
-    setMessage("");
+    setMessage(""); 
 
     const { error } = await supabase.from("profiles").upsert({
       id: user.id,
@@ -32,6 +32,12 @@ export default function AccountPage() {
 
     setMessage("Username saved.");
   }
+
+  useEffect(() => {
+        if (profile?.username) {
+            setUsername(profile.username);
+        }
+        }, [profile]);
 
   async function changePassword(e) {
     e.preventDefault();
