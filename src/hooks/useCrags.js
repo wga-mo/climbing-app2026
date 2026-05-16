@@ -46,7 +46,6 @@ export function useCrags(filters) {
       } else {
         setCrags(data || []);
       }
-      console.log(data);
       setLoading(false);
     }
 

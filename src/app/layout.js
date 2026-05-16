@@ -2,7 +2,7 @@ import "./globals.css";
 import Navbar from "@/components/Navbar";
 import { FiltersProvider } from "@/context/FiltersContext";
 import MobileFiltersOverlay from "@/components/MobileFiltersOverlay";
-import AuthGuard from "@/components/AuthGuard";
+import { AuthProvider } from "@/context/AuthContext";
 
 
 export default function RootLayout({ children }) {
@@ -10,9 +10,11 @@ export default function RootLayout({ children }) {
     <html lang="en">
       <body className="min-h-screen flex flex-col">
         <FiltersProvider>
-          <Navbar />
-          <MobileFiltersOverlay />
-          {children}
+          <AuthProvider>
+            <Navbar />
+            <MobileFiltersOverlay />
+            {children}
+          </AuthProvider>
         </FiltersProvider>
       </body>
     </html>

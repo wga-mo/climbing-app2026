@@ -1,22 +1,40 @@
 'use client';
 
 import { useFilters } from "@/context/FiltersContext";
-import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/lib/supabase";
+import { useEffect, useRef, useState } from "react";
 
 export default function Navbar() {
   
+  //Auth-profile related
+  const router = useRouter();
+  const { user, profile } = useAuth();
+
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef(null);
+
+  useEffect(() => {
+    function handleClickOutside(event) {
+    if (menuRef.current && !menuRef.current.contains(event.target)) {
+      setMenuOpen(false);
+    }
+  }
+
+  document.addEventListener("mousedown", handleClickOutside);
+
+  return () => {
+    document.removeEventListener("mousedown", handleClickOutside);
+  };
+  }, []);
+
   const {
     filters,
     setFilters,
     setMobileFiltersVisible,
   } = useFilters();
-
-  //Auth-profile related
-  const router = useRouter();
-  const [user, setUser] = useState(null);
 
   function toggleGlobalFilter() {
     setFilters(prev => ({
@@ -24,28 +42,6 @@ export default function Navbar() {
       globalFilter: !prev.globalFilter,
     }));
   }
-
-  useEffect(() => {
-  async function getUser() {
-    const { data } =
-      await supabase.auth.getUser();
-
-    setUser(data.user);
-  }
-
-  getUser();
-
-  const {
-    data: { subscription },
-  } = supabase.auth.onAuthStateChange(
-    (_event, session) => {
-      setUser(session?.user ?? null);
-    }
-  );
-
-  return () =>
-    subscription.unsubscribe();
-  }, []);
 
   async function handleLogout() {
     await supabase.auth.signOut();
@@ -57,6 +53,7 @@ export default function Navbar() {
   return (
     <header className="border-b bg-white">
       <nav className="flex h-14 items-center justify-between px-4">
+        {/* Climing database */}
         <div className="text-lg font-bold">
           <Link
               href="/"
@@ -66,6 +63,8 @@ export default function Navbar() {
         </div>
 
         <div className="flex items-center gap-3 lg:hidden">
+
+          {/* Filters button*/}
           <button
             onClick={() => setMobileFiltersVisible(true)}
             className="rounded border px-3 py-1 text-sm"
@@ -73,6 +72,7 @@ export default function Navbar() {
             Filters
           </button>
 
+          {/* Filters toggle*/}
           <label className="relative inline-flex cursor-pointer items-center">
             <input
               type="checkbox"
@@ -87,13 +87,40 @@ export default function Navbar() {
           </label>
 
           {user ? (
-            <button
-              onClick={handleLogout}
-              className="rounded border px-3 py-1 text-sm"
-            >
-              Log out
-            </button>
-          ) : (
+  <div className="relative" ref={menuRef}>
+    <button
+      onClick={() => setMenuOpen(!menuOpen)}
+      className="flex h-9 w-9 items-center justify-center rounded-full border text-sm font-semibold"
+    >
+      {(profile?.username || user?.email)
+        ?.charAt(0)
+        .toUpperCase()}
+    </button>
+
+    {menuOpen && (
+      <div className="absolute right-0 top-11 z-50 w-44 rounded-md border bg-white shadow-lg">
+        <div className="border-b px-3 py-2 text-sm font-medium">
+          {profile?.username || user?.email}
+        </div>
+
+        <Link
+          href="/account"
+          onClick={() => setMenuOpen(false)}
+          className="block px-3 py-2 text-sm hover:bg-gray-100"
+        >
+          Account
+        </Link>
+
+        <button
+          onClick={handleLogout}
+          className="block w-full px-3 py-2 text-left text-sm hover:bg-gray-100"
+        >
+          Log out
+        </button>
+      </div>
+    )}
+  </div>
+) : (
             <Link
               href="/login"
               className="rounded border px-3 py-1 text-sm"
@@ -106,9 +133,9 @@ export default function Navbar() {
         <div className="hidden lg:block">
           {user ? (
             <div className="flex items-center gap-3">
-              <span className="text-sm text-gray-600">
-                {user.email}
-              </span>
+              <Link href="/account" className="text-sm underline">
+                {profile?.username || user?.email}
+              </Link>
 
               <button
                 onClick={handleLogout}
