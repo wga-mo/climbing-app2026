@@ -49,7 +49,7 @@ export default function FiltersSidebar({ filters, setFilters, mobile = false, mo
       className={
         mobile
           ? "fixed inset-0 z-[9999] overflow-auto bg-white p-4"
-          : "w-64 shrink-0 overflow-auto border-r bg-gray-50 p-3"
+          : "h-full w-64 shrink-0 overflow-auto border-r bg-gray-50 p-3"
       }>
       
       

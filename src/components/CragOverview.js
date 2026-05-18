@@ -75,7 +75,7 @@ export default function CragOverview({
     { icon: "☂️", value: formatValue(crag.rainproof), tooltip: `Rainproof` },
     { icon: "⛺", value: formatValue(crag.campsite), tooltip: `Campsite` },
     { icon: "🏝️", value: formatValue(crag.bathing), tooltip: `Bathing` },
-    { icon: "🚌", value: formatValue(crag.buss_friendly), tooltip: `Bus friendly` },
+    { icon: "🚌", value: formatValue(crag.buss_friendly), tooltip: `Public transport friendly` },
   ];
 
   return (

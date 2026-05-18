@@ -8,7 +8,7 @@ import { AuthProvider } from "@/context/AuthContext";
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body className="min-h-screen flex flex-col">
+      <body className="h-screen overflow-hidden flex flex-col">
         <FiltersProvider>
           <AuthProvider>
             <Navbar />
