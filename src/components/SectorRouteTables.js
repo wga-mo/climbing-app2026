@@ -9,6 +9,7 @@ import { gradeConversion } from "@/utils/gradeConversion";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/lib/supabase";
 import { useEffect, useState } from "react";
+import TickModal from "@/components/TickModal";
 
 export default function SectorRouteTables({ sectors, routes }) {
   const { filters } = useFilters();
@@ -24,14 +25,16 @@ export default function SectorRouteTables({ sectors, routes }) {
       new Date().toISOString().slice(0, 10)
   );
 
+  //Load ticks for current user
   useEffect(() => {
     async function loadTicks() {
       if (!user) return;
 
       const { data, error } = await supabase
         .from("ticks")
-        .select("route_id")
-        .eq("user_id", user.id);
+        .select("tick_id, route_id, route_id, tick_type, tick_date, note, created_at" )
+        .eq("user_id", user.id)
+        .order("tick_date", { ascending: false });
 
       if (error) {
         console.error(error);
@@ -50,6 +53,13 @@ export default function SectorRouteTables({ sectors, routes }) {
 
     return acc;
   }, {});
+
+  const selectedRouteTicks = selectedRoute
+  ? ticks.filter(
+      tick =>
+        tick.route_id === selectedRoute.route_id
+    )
+  : [];
 
   async function submitTick() {
     if (!user || !selectedRoute) return;
@@ -87,6 +97,7 @@ export default function SectorRouteTables({ sectors, routes }) {
 
     setTimeout(() => setToast(""), 2500);
   }
+  
 
   return (
     <section className="mt-8 space-y-6">
@@ -165,15 +176,15 @@ export default function SectorRouteTables({ sectors, routes }) {
                     </td>
 
                     <td className="py-3 align-top">
-  {user && (
-    <button
-  onClick={() => setSelectedRoute(route)}
-  className="rounded border px-2 py-1 text-xs hover:bg-gray-100"
->
-  {tickCounts[route.route_id] ? `+ (${tickCounts[route.route_id]})` : "+"}
-</button>
-  )}
-</td>
+                      {user && (
+                        <button
+                      onClick={() => setSelectedRoute(route)}
+                      className="rounded border px-2 py-1 text-xs hover:bg-gray-100"
+                    >
+                      {tickCounts[route.route_id] ? `+ (${tickCounts[route.route_id]})` : "+"}
+                    </button>
+                      )}
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -182,79 +193,25 @@ export default function SectorRouteTables({ sectors, routes }) {
         );
       })}
 
-{selectedRoute && (
-  <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/40 p-4">
-    <div className="w-full max-w-sm rounded bg-white p-4 shadow-lg">
-      <h2 className="text-xl font-semibold">
-        Tick route
-      </h2>
+      <TickModal
+        selectedRoute={selectedRoute}
+        selectedRouteTicks={selectedRouteTicks}
+        tickDate={tickDate}
+        setTickDate={setTickDate}
+        tickType={tickType}
+        setTickType={setTickType}
+        note={note}
+        setNote={setNote}
+        onCancel={() => setSelectedRoute(null)}
+        onSubmit={submitTick}
+      />
 
-      <p className="mt-1 text-sm text-gray-600">
-        {selectedRoute.name}
-      </p>
-
-      <div className="mt-4 space-y-3">
-        <label className="block text-sm">
-          Date
-          <input
-            type="date"
-            value={tickDate}
-            onChange={(e) => setTickDate(e.target.value)}
-            className="mt-1 w-full rounded border p-2"
-          />
-        </label>
-
-        <label className="block text-sm">
-          Type
-          <select
-            value={tickType}
-            onChange={(e) => setTickType(e.target.value)}
-            className="mt-1 w-full rounded border p-2"
-          >
-            <option value="climbed">Climbed</option>
-            <option value="onsight">Onsight</option>
-            <option value="flash">Flash</option>
-            <option value="redpoint">Redpoint</option>
-            <option value="attempt">Attempt</option>
-            <option value="repeat">Repeat</option>
-          </select>
-        </label>
-
-        <label className="block text-sm">
-          Note
-          <textarea
-            value={note}
-            onChange={(e) => setNote(e.target.value)}
-            className="mt-1 w-full rounded border p-2"
-            rows="3"
-          />
-        </label>
-      </div>
-
-      <div className="mt-5 flex justify-end gap-2">
-        <button
-          onClick={() => setSelectedRoute(null)}
-          className="rounded border px-3 py-1 text-sm"
-        >
-          Cancel
-        </button>
-
-        <button
-          onClick={submitTick}
-          className="rounded bg-black px-3 py-1 text-sm text-white"
-        >
-          Save tick
-        </button>
-      </div>
-    </div>
-  </div>
-)}
-{toast && (
-  <div className="fixed bottom-4 right-4 z-[9999] rounded bg-black px-4 py-2 text-sm text-white shadow-lg">
-    {toast}
-  </div>
-)}
-
+      // Toast notification
+        {toast && (
+          <div className="fixed bottom-4 right-4 z-[9999] rounded bg-black px-4 py-2 text-sm text-white shadow-lg">
+            {toast}
+          </div>
+        )}
     </section>
     
   );
