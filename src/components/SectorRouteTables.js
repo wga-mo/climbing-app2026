@@ -5,8 +5,88 @@ import { doesRouteMatchFilters } from "@/utils/doesRouteMatchFilters";
 import SectorDetailsSection from "@/components/SectorDetailsSection";
 import { gradeConversion } from "@/utils/gradeConversion";
 
+//Pass user into route table in order to enable ticking
+import { useAuth } from "@/context/AuthContext";
+import { supabase } from "@/lib/supabase";
+import { useEffect, useState } from "react";
+
 export default function SectorRouteTables({ sectors, routes }) {
   const { filters } = useFilters();
+  
+  //Ticks
+  const { user } = useAuth();
+  const [ticks, setTicks] = useState([]);
+  const [tickType, setTickType] = useState("climbed");
+  const [note, setNote] = useState("");
+  const [toast, setToast] = useState("");
+  const [selectedRoute, setSelectedRoute] = useState(null);
+  const [tickDate, setTickDate] = useState(
+      new Date().toISOString().slice(0, 10)
+  );
+
+  useEffect(() => {
+    async function loadTicks() {
+      if (!user) return;
+
+      const { data, error } = await supabase
+        .from("ticks")
+        .select("route_id")
+        .eq("user_id", user.id);
+
+      if (error) {
+        console.error(error);
+        return;
+      }
+
+      setTicks(data);
+    }
+
+    loadTicks();
+  }, [user]);
+
+  const tickCounts = ticks.reduce((acc, tick) => {
+    acc[tick.route_id] =
+      (acc[tick.route_id] || 0) + 1;
+
+    return acc;
+  }, {});
+
+  async function submitTick() {
+    if (!user || !selectedRoute) return;
+
+    const { error } = await supabase
+      .from("ticks")
+      .insert({
+        user_id: user.id,
+        route_id: selectedRoute.route_id,
+        tick_type: tickType,
+        tick_date: tickDate,
+        note,
+      });
+
+    if (error) {
+      console.error(error);
+      setToast("Could not save tick");
+      return;
+    }
+
+    setTicks(prev => [
+      ...prev,
+      {
+        route_id: selectedRoute.route_id,
+        tick_type: tickType,
+        tick_date: tickDate,
+        note,
+      },
+    ]);
+
+    setSelectedRoute(null);
+    setNote("");
+    setTickType("climbed");
+    setToast("Tick saved");
+
+    setTimeout(() => setToast(""), 2500);
+  }
 
   return (
     <section className="mt-8 space-y-6">
@@ -48,6 +128,8 @@ export default function SectorRouteTables({ sectors, routes }) {
                   <th className="hidden md:table-cell w-16 py-2 text-left">
                     Length
                   </th>
+
+                  <th className="w-14 py-2 text-left">Tick</th>
                 </tr>
               </thead>
 
@@ -81,6 +163,17 @@ export default function SectorRouteTables({ sectors, routes }) {
                     <td className="hidden md:table-cell py-3">
                       {route.length}
                     </td>
+
+                    <td className="py-3 align-top">
+  {user && (
+    <button
+  onClick={() => setSelectedRoute(route)}
+  className="rounded border px-2 py-1 text-xs hover:bg-gray-100"
+>
+  {tickCounts[route.route_id] ? `+ (${tickCounts[route.route_id]})` : "+"}
+</button>
+  )}
+</td>
                   </tr>
                 ))}
               </tbody>
@@ -88,6 +181,82 @@ export default function SectorRouteTables({ sectors, routes }) {
           </SectorDetailsSection>
         );
       })}
+
+{selectedRoute && (
+  <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/40 p-4">
+    <div className="w-full max-w-sm rounded bg-white p-4 shadow-lg">
+      <h2 className="text-xl font-semibold">
+        Tick route
+      </h2>
+
+      <p className="mt-1 text-sm text-gray-600">
+        {selectedRoute.name}
+      </p>
+
+      <div className="mt-4 space-y-3">
+        <label className="block text-sm">
+          Date
+          <input
+            type="date"
+            value={tickDate}
+            onChange={(e) => setTickDate(e.target.value)}
+            className="mt-1 w-full rounded border p-2"
+          />
+        </label>
+
+        <label className="block text-sm">
+          Type
+          <select
+            value={tickType}
+            onChange={(e) => setTickType(e.target.value)}
+            className="mt-1 w-full rounded border p-2"
+          >
+            <option value="climbed">Climbed</option>
+            <option value="onsight">Onsight</option>
+            <option value="flash">Flash</option>
+            <option value="redpoint">Redpoint</option>
+            <option value="attempt">Attempt</option>
+            <option value="repeat">Repeat</option>
+          </select>
+        </label>
+
+        <label className="block text-sm">
+          Note
+          <textarea
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            className="mt-1 w-full rounded border p-2"
+            rows="3"
+          />
+        </label>
+      </div>
+
+      <div className="mt-5 flex justify-end gap-2">
+        <button
+          onClick={() => setSelectedRoute(null)}
+          className="rounded border px-3 py-1 text-sm"
+        >
+          Cancel
+        </button>
+
+        <button
+          onClick={submitTick}
+          className="rounded bg-black px-3 py-1 text-sm text-white"
+        >
+          Save tick
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+{toast && (
+  <div className="fixed bottom-4 right-4 z-[9999] rounded bg-black px-4 py-2 text-sm text-white shadow-lg">
+    {toast}
+  </div>
+)}
+
     </section>
+    
   );
+  
 }

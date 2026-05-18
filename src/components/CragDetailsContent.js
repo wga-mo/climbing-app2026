@@ -14,6 +14,7 @@ export default function CragDetailsContent({ crag, sectors, routes, guidebooks }
   
   return (
     <>
+      {/* Bread crumb */}
       <div className="sticky top-0 left-0 right-0 z-40 px-2 py-2 text-sm bg-white">
         <nav className="flex items-center gap-2 overflow-hidden">
           <Link href="/" className="shrink-0 underline">
