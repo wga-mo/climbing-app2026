@@ -16,7 +16,7 @@ export default function DetailsClientLayout({ children }) {
         />
       </div>
 
-      <section className="flex-1 overflow-auto p-4">
+      <section className="flex-1 overflow-auto px-4 pb-4 pt-0">
         {children}
       </section>
     </main>

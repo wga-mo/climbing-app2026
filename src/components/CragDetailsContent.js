@@ -14,20 +14,19 @@ export default function CragDetailsContent({ crag, sectors, routes, guidebooks }
   
   return (
     <>
-      
-    <div className="sticky top-0 z-20 px-2 py-2 text-sm">
-  <nav className="flex items-center gap-2 overflow-hidden">
-    <Link href="/" className="shrink-0 underline">
-      Crag overview
-    </Link>
+      <div className="sticky top-0 left-0 right-0 z-40 px-2 py-2 text-sm bg-white">
+        <nav className="flex items-center gap-2 overflow-hidden">
+          <Link href="/" className="shrink-0 underline">
+            Crag overview
+          </Link>
 
-    <span className="shrink-0">/</span>
+          <span className="shrink-0">/</span>
 
-    <span className="truncate font-medium">
-      {crag.crag_name}
-    </span>
-  </nav>
-</div>
+          <span className="truncate font-medium">
+            {crag.crag_name}
+          </span>
+        </nav>
+      </div>
 
       <CragOverview
         crag={crag}
@@ -46,6 +45,7 @@ export default function CragDetailsContent({ crag, sectors, routes, guidebooks }
         sectors={sectors}
         routes={routes}
       />
+
     </>
   );
 }

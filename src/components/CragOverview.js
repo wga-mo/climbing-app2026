@@ -84,51 +84,51 @@ export default function CragOverview({
       {/* Left side: crag info */}
       <div className="rounded border p-4">
         <div className="flex items-start justify-between gap-3">
-  <h1 className="text-3xl font-bold">
-    {crag.crag_name}
-  </h1>
+          <h1 className="text-3xl font-bold">
+            {crag.crag_name}
+          </h1>
 
-  {parkingMarker && (
-  <div className="relative shrink-0" ref={navigationMenuRef}>
-    <button
-      onClick={() =>
-        setShowNavigationMenu(prev => !prev)
-      }
-      className="rounded border px-2 py-1 text-xs hover:bg-gray-100 sm:text-sm"
-    >
-      📍 Navigate
-    </button>
+          {parkingMarker && (
+          <div className="relative shrink-0" ref={navigationMenuRef}>
+            <button
+              onClick={() =>
+                setShowNavigationMenu(prev => !prev)
+              }
+              className="rounded border px-2 py-1 text-xs hover:bg-gray-100 sm:text-sm"
+            >
+              📍 Navigate
+            </button>
 
-    {showNavigationMenu && (
-      <div className="absolute right-0 top-10 z-50 min-w-[160px] rounded-md border bg-white shadow-lg">
-        <a
-          href={googleMapsUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="block px-3 py-2 text-sm hover:bg-gray-100"
-          onClick={() =>
-            setShowNavigationMenu(false)
-          }
-        >
-          Google Maps
-        </a>
+            {showNavigationMenu && (
+              <div className="absolute right-0 top-10 z-50 min-w-[160px] rounded-md border bg-white shadow-lg">
+                <a
+                  href={googleMapsUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block px-3 py-2 text-sm hover:bg-gray-100"
+                  onClick={() =>
+                    setShowNavigationMenu(false)
+                  }
+                >
+                  Google Maps
+                </a>
 
-        <a
-          href={appleMapsUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="block px-3 py-2 text-sm hover:bg-gray-100"
-          onClick={() =>
-            setShowNavigationMenu(false)
-          }
-        >
-          Apple Maps
-        </a>
-      </div>
-    )}
-  </div>
-)}
-</div>
+                <a
+                  href={appleMapsUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block px-3 py-2 text-sm hover:bg-gray-100"
+                  onClick={() =>
+                    setShowNavigationMenu(false)
+                  }
+                >
+                  Apple Maps
+                </a>
+              </div>
+            )}
+          </div>
+        )}
+        </div>
 
         <div className="mt-4 border-y">
             <div className="grid grid-cols-6 text-center">
