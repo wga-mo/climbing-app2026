@@ -53,7 +53,7 @@ export default function Navbar() {
   return (
     <header className="sticky top-0 z-50 border-b bg-white shadow-sm">
       <nav className="flex h-14 items-center justify-between px-4">
-        {/* Climing database */}
+        {/* Climing database title */}
         <div className="text-lg font-bold">
           <Link
               href="/"
@@ -62,6 +62,7 @@ export default function Navbar() {
             </Link>
         </div>
 
+        {/* Mobile screen setup */}
         <div className="flex items-center gap-3 lg:hidden">
 
           {/* Filters button*/}
@@ -87,40 +88,48 @@ export default function Navbar() {
           </label>
 
           {user ? (
-  <div className="relative" ref={menuRef}>
-    <button
-      onClick={() => setMenuOpen(!menuOpen)}
-      className="flex h-9 w-9 items-center justify-center rounded-full border text-sm font-semibold"
-    >
-      {(profile?.username || user?.email)
-        ?.charAt(0)
-        .toUpperCase()}
-    </button>
+            <div className="relative" ref={menuRef}>
+              <button
+                onClick={() => setMenuOpen(!menuOpen)}
+                className="flex h-9 w-9 items-center justify-center rounded-full border text-sm font-semibold"
+              >
+                {(profile?.username || user?.email)
+                  ?.charAt(0)
+                  .toUpperCase()}
+              </button>
 
-    {menuOpen && (
-      <div className="absolute right-0 top-11 z-50 w-44 rounded-md border bg-white shadow-lg">
-        <div className="border-b px-3 py-2 text-sm font-medium">
-          {profile?.username || user?.email}
-        </div>
+              {menuOpen && (
+                <div className="absolute right-0 top-11 z-50 w-44 rounded-md border bg-white shadow-lg">
+                  <div className="border-b px-3 py-2 text-sm font-medium">
+                    {profile?.username || user?.email}
+                  </div>
 
-        <Link
-          href="/account"
-          onClick={() => setMenuOpen(false)}
-          className="block px-3 py-2 text-sm hover:bg-gray-100"
-        >
-          Account
-        </Link>
+                  <Link
+                    href="/account"
+                    onClick={() => setMenuOpen(false)}
+                    className="block px-3 py-2 text-sm hover:bg-gray-100"
+                  >
+                    Account
+                  </Link>
 
-        <button
-          onClick={handleLogout}
-          className="block w-full px-3 py-2 text-left text-sm hover:bg-gray-100"
-        >
-          Log out
-        </button>
-      </div>
-    )}
-  </div>
-) : (
+                  <Link
+                    href="/ticks"
+                    onClick={() => setMenuOpen(false)}
+                    className="block px-3 py-2 text-sm hover:bg-gray-100"
+                  >
+                    My ticks
+                  </Link>
+
+                  <button
+                    onClick={handleLogout}
+                    className="block w-full px-3 py-2 text-left text-sm hover:bg-gray-100"
+                  >
+                    Log out
+                  </button>
+                </div>
+              )}
+            </div>
+          ) : (
             <Link
               href="/login"
               className="rounded border px-3 py-1 text-sm"
@@ -130,21 +139,50 @@ export default function Navbar() {
           )}
         </div>
 
+        {/* Desktop screen setup */}
         <div className="hidden lg:block">
           {user ? (
-            <div className="flex items-center gap-3">
-              <Link href="/account" className="text-sm underline">
+            <div className="relative" ref={menuRef}>
+              <button
+                onClick={() => setMenuOpen(!menuOpen)}
+                className="text-sm underline"
+              >
                 {profile?.username || user?.email}
-              </Link>
+              </button>
 
+              {menuOpen && (
+                <div className="absolute right-0 top-8 z-50 w-44 rounded-md border bg-white shadow-lg">
+                  <div className="border-b px-3 py-2 text-sm font-medium">
+                    {profile?.username || user?.email}
+                  </div>
+
+                  <Link
+                    href="/account"
+                    onClick={() => setMenuOpen(false)}
+                    className="block px-3 py-2 text-sm hover:bg-gray-100"
+                  >
+                    Account
+                  </Link>
+
+                  <Link
+                    href="/ticks"
+                    onClick={() => setMenuOpen(false)}
+                    className="block px-3 py-2 text-sm hover:bg-gray-100"
+                  >
+                    My ticks
+                  </Link>
+                </div>
+              )}
               <button
                 onClick={handleLogout}
-                className="rounded-md border px-3 py-1 text-sm"
+                className="rounded-md border px-3 py-1 text-sm ml-4"
               >
                 Log out
               </button>
             </div>
+            
           ) : (
+            
             <Link
               href="/login"
               className="rounded-md border px-3 py-1 text-sm"
