@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import DetailsClientLayout from "@/components/DetailsClientLayout";
 import CragDetailsContent from "@/components/CragDetailsContent";
 import { supabase } from "@/lib/supabase";
+import { useAuth } from "@/context/AuthContext";
 
 export default function CragDetailsClient({ cragId }) {
   const [crag, setCrag] = useState(null);
@@ -12,12 +13,17 @@ export default function CragDetailsClient({ cragId }) {
   const [guidebooks, setGuidebooks] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  const {user} = useAuth();
+  const cragSource = user ? "crags" : "public_crag_preview";
+  const sectorSource = user ? "sectors" : "public_sector_preview";
+  const routeSource = user ? "routes" : "public_route_preview";
+
   useEffect(() => {
     async function fetchDetails() {
       setLoading(true);
         
       const { data: cragData, error: cragError } = await supabase
-        .from("crags")
+        .from(cragSource)
         .select(`
           crag_id,
           crag_name,
@@ -46,7 +52,7 @@ export default function CragDetailsClient({ cragId }) {
       }
 
       const { data: sectorData } = await supabase
-        .from("sectors")
+        .from(sectorSource)
         .select(`
           sector_id,
           crag_id,
@@ -66,7 +72,7 @@ export default function CragDetailsClient({ cragId }) {
         .order("sector_in_crag");
 
       const { data: routeData } = await supabase
-        .from("routes")
+        .from(routeSource)
         .select(`
           route_id,
           name,

@@ -140,7 +140,9 @@ export default function SectorRouteTables({ sectors, routes }) {
                     Length
                   </th>
 
-                  <th className="w-14 py-2 text-left">Tick</th>
+                  {user && (
+                    <th className="w-14 py-2 text-left">Tick</th>
+                  )}
                 </tr>
               </thead>
 
@@ -178,11 +180,11 @@ export default function SectorRouteTables({ sectors, routes }) {
                     <td className="py-3 align-top">
                       {user && (
                         <button
-                      onClick={() => setSelectedRoute(route)}
-                      className="rounded border px-2 py-1 text-xs hover:bg-gray-100"
-                    >
-                      {tickCounts[route.route_id] ? `+ (${tickCounts[route.route_id]})` : "+"}
-                    </button>
+                          onClick={() => setSelectedRoute(route)}
+                          className="rounded border px-2 py-1 text-xs hover:bg-gray-100"
+                        >
+                          {tickCounts[route.route_id] ? `+ (${tickCounts[route.route_id]})` : "+"}
+                        </button>
                       )}
                     </td>
                   </tr>
@@ -206,7 +208,7 @@ export default function SectorRouteTables({ sectors, routes }) {
         onSubmit={submitTick}
       />
 
-      // Toast notification
+      
         {toast && (
           <div className="fixed bottom-4 right-4 z-[9999] rounded bg-black px-4 py-2 text-sm text-white shadow-lg">
             {toast}

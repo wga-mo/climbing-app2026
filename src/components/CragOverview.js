@@ -141,15 +141,17 @@ export default function CragOverview({
             </div>
             </div>
 
-        <div className="mt-6">
-            <h2 className="text-xl font-semibold">
-            Description
-            </h2>
+        {crag.description && (
+          <div className="mt-6">
+              <h2 className="text-xl font-semibold">
+              Description
+              </h2>
 
-            <p className="mt-2 whitespace-pre-line">
-            {crag.description}
-            </p>
-        </div>
+              <p className="mt-2 whitespace-pre-line">
+              {crag.description}
+              </p>
+          </div>
+        )}
 
         {crag.approach && (
             <div className="mt-6">

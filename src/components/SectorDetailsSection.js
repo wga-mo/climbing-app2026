@@ -1,4 +1,5 @@
 import SectorTopo from "@/components/SectorTopo";
+import { useAuth } from "@/context/AuthContext";
 
 export default function SectorDetailsSection({
   sector,
@@ -24,6 +25,8 @@ export default function SectorDetailsSection({
         return directions[orientation] ?? "?";
     }
 
+    const {user} = useAuth();
+
     return (
         <section className="mt-6 rounded border p-4">
             <div className="grid gap-4 lg:grid-cols-2">
@@ -34,48 +37,52 @@ export default function SectorDetailsSection({
                         <h2 className="text-xl font-semibold">
                             {sector.name}
                         </h2>
-
-                        {/* Orientation */}
-                        {sector.orientation !== null && (
-                        <div
-                            className="flex items-center gap-1 text-sm text-gray-600"
-                            title="Orientation"
-                        >
-                            <span className="text-lg">🧭</span>
-
-                            <span>
-                            {formatOrientation(sector.orientation)}
-                            </span>
-                        </div>
-                        )}
-
-                        {/* Walking time */}
-                        {sector.walking_time !== null && (
-                            <div
-                            className="flex items-center gap-1 text-sm text-gray-600"
-                            title="Walking time"
-                            >
-                            <span className="text-lg">🚶‍➡️</span>
-
-                            <span>
-                                {sector.walking_time} min
-                            </span>
-                            </div>
-                        )}
                         
-                        {/* Steepness */}
-                        <div className="flex gap-1">
-                            {sector.steepness?.map(type => (
-                            <img
-                                key={type}
-                                src={getSteepnessIcon(type)}
-                                alt={type}
-                                title={type}
-                                className="h-6 w-6 object-contain"
-                            />
-                            ))}
-                        </div>
+                        {user && (
+                            <>
+                            {/* Orientation */}
+                            {sector.orientation !== null && (
+                                
+                                <div
+                                    className="flex items-center gap-1 text-sm text-gray-600"
+                                    title="Orientation"
+                                >
+                                    <span className="text-lg">🧭</span>
 
+                                    <span>
+                                    {formatOrientation(sector.orientation)}
+                                    </span>
+                                </div>
+                            )}
+
+                            {/* Walking time */}
+                            {sector.walking_time !== null && (
+                                <div
+                                    className="flex items-center gap-1 text-sm text-gray-600"
+                                    title="Walking time"
+                                    >
+                                    <span className="text-lg">🚶‍➡️</span>
+
+                                    <span>
+                                        {sector.walking_time} min
+                                    </span>
+                                </div>
+                            )}
+                            
+                            {/* Steepness */}
+                            <div className="flex gap-1">
+                                {sector.steepness?.map(type => (
+                                <img
+                                    key={type}
+                                    src={getSteepnessIcon(type)}
+                                    alt={type}
+                                    title={type}
+                                    className="h-6 w-6 object-contain"
+                                />
+                                ))}
+                            </div>
+                            </>
+                        )}
                         
                     </div>
 
@@ -90,15 +97,16 @@ export default function SectorDetailsSection({
                     </div>
                 </div>
 
-            {/* Right side */}
-            <div>
-            <h3 className="mb-3 text-lg font-semibold">
-                Topo
-            </h3>
+                {/* Right side */}
+                {user && (
+                    <div>
+                        <h3 className="mb-3 text-lg font-semibold">
+                            Topo
+                        </h3>
 
-            <SectorTopo sector={sector} />
-            </div>
-
+                        <SectorTopo sector={sector} />
+                    </div>
+                )}
             </div>
         </section>
   );
