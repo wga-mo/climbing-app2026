@@ -82,7 +82,7 @@ export default function CragDetailsClient({ cragId }) {
           sector_name
         `)
         .eq("crag_id", cragId)
-        .order("sector_id");
+        .order("nr_in_picture");
 
       const { data: guidebookData } = await supabase
         .from("link_crags_guidebooks")
