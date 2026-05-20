@@ -8,38 +8,42 @@ export default function SectorTopo({ sector }) {
   const [imageUrl, setImageUrl] = useState(null);
   const [errorMessage, setErrorMessage] = useState("");
 
-  const hasTopo = !!sector.sector_in_crag;
+  const hasTopo = !!sector.sector_in_crag && !!sector.topo_extension;
 
   useEffect(() => {
     if (!hasTopo) return;
 
+    let cancelled = false;
+
     async function loadTopo() {
+    try {
       setImageUrl(null);
       setErrorMessage("");
 
-      const basePath = `crags/${sector.crag_id}/sector-${sector.sector_in_crag}`;
+      const path =
+        `crags/${sector.crag_id}/sector-${sector.sector_in_crag}.${sector.topo_extension}`;
 
-      const possiblePaths = [
-        `${basePath}.webp`,
-        `${basePath}.png`,
-      ];
-
-      for (const path of possiblePaths) {
-        const { data, error } = await supabase.storage
+      const { data, error } =
+        await supabase.storage
           .from("topos")
-          .createSignedUrl(path, 60 * 60);
+          .createSignedUrl(path, 3600);
 
-        if (!error && data?.signedUrl) {
-          setImageUrl(data.signedUrl);
-          return;
-        }
-      }
+      if (error) throw error;
 
+      setImageUrl(data.signedUrl);
+    } catch (err) {
+      console.error("Topo loading failed:", err);
       setErrorMessage("Could not load topo.");
     }
+  }
 
-    loadTopo();
-  }, [hasTopo, sector.crag_id, sector.sector_in_crag]);
+  loadTopo();
+}, [
+  hasTopo,
+  sector.crag_id,
+  sector.sector_in_crag,
+  sector.topo_extension
+]);
 
   if (!hasTopo) {
     return (

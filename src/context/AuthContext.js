@@ -53,6 +53,7 @@ export function AuthProvider({ children }) {
         .single();
 
       setProfile(profileData);
+      setLoading(false);
     });
 
     return () => subscription.unsubscribe();

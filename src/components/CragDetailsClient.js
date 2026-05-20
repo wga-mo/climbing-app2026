@@ -13,14 +13,18 @@ export default function CragDetailsClient({ cragId }) {
   const [guidebooks, setGuidebooks] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const {user} = useAuth();
-  const cragSource = user ? "crags" : "public_crag_preview";
-  const sectorSource = user ? "sectors" : "public_sector_preview";
-  const routeSource = user ? "routes" : "public_route_preview";
+  const { user, loading: authLoading } = useAuth();
+  console.log('user', user);
 
   useEffect(() => {
+    if (authLoading) return;
+
     async function fetchDetails() {
       setLoading(true);
+
+      const cragSource = user ? "crags" : "public_crag_preview";
+      const sectorSource = user ? "sectors" : "public_sector_preview";
+      const routeSource = user ? "routes" : "public_route_preview";
         
       const { data: cragData, error: cragError } = await supabase
         .from(cragSource)
@@ -46,12 +50,13 @@ export default function CragDetailsClient({ cragId }) {
         .single();
 
       if (cragError || !cragData) {
+        console.log("Error fetching crag details:", cragError);
         setCrag(null);
         setLoading(false);
         return;
       }
 
-      const { data: sectorData } = await supabase
+      const { data: sectorData, error: sectorError } = await supabase
         .from(sectorSource)
         .select(`
           sector_id,
@@ -66,12 +71,20 @@ export default function CragDetailsClient({ cragId }) {
           link,
           comment,
           loc_lat,
-          loc_long
+          loc_long,
+          topo_extension
         `)
         .eq("crag_id", cragId)
         .order("sector_in_crag");
+      
+        console.log(sectorSource, " - ", sectorData);
 
-      const { data: routeData } = await supabase
+      if (sectorError || !sectorData) {
+        console.log("Error fetching sector details:", sectorError);
+        return;
+      }
+
+      const { data: routeData, error: routeError } = await supabase
         .from(routeSource)
         .select(`
           route_id,
@@ -89,6 +102,11 @@ export default function CragDetailsClient({ cragId }) {
         `)
         .eq("crag_id", cragId)
         .order("nr_in_picture");
+
+      if (routeError || !routeData) {
+        console.log("Error fetching route details:", routeError);
+        return;
+      }
 
       const { data: guidebookData } = await supabase
         .from("link_crags_guidebooks")
@@ -109,7 +127,7 @@ export default function CragDetailsClient({ cragId }) {
     }
 
     fetchDetails();
-  }, [cragId]);
+  }, [cragId, user, authLoading]);
 
   if (loading) {
     return (
