@@ -36,10 +36,12 @@ export default function CragDetailsContent({ crag, sectors, routes, guidebooks }
       >
         
         <GuidebooksList guidebooks={guidebooks} />
-        <GradeHistogram
-          routes={routes}
-          filters={filters}
-        />
+        <div className="">
+          <GradeHistogram
+            routes={routes}
+            filters={filters}
+          />
+        </div>
 
       </CragOverview>
 

@@ -12,6 +12,11 @@ const gradeBuckets = [
 ];
 
 export default function GradeHistogram({ routes, filters }) {
+  const totalRoutes = routes.length;
+  const matchingRoutes = routes.filter(route =>
+    doesRouteMatchFilters(route, filters)
+  ).length;
+
   const histogramData = gradeBuckets.map(bucket => {
     const routesInBucket = routes.filter(route =>
       route.grade_int >= bucket.min &&
@@ -39,43 +44,52 @@ export default function GradeHistogram({ routes, filters }) {
   );
 
   return (
-    <section className="mt-8">
+    <section className="mt-8 w-full max-w-[600px]">
       <h2 className="text-xl font-semibold">Grade distribution</h2>
 
-      <div className="mt-4 flex h-48 items-end gap-3 border-b border-l px-4 pb-2">
-        {histogramData.map(bucket => {
-          const visibleHeight = (bucket.visible / maxTotal) * 100;
-          const hiddenHeight = (bucket.hidden / maxTotal) * 100;
+      <p className="text-sm text-gray-600">
+        {totalRoutes} routes, whereof {matchingRoutes} match current filters
+      </p>
 
-          return (
+      <div className="mt-4">
+        <div className="flex h-40 items-end gap-3 border-b px-4">
+          {histogramData.map(bucket => {
+            const visibleHeight = (bucket.visible / maxTotal) * 100;
+            const hiddenHeight = (bucket.hidden / maxTotal) * 100;
+
+            return (
+              <div
+                key={bucket.label}
+                className="flex flex-1 items-end justify-center"
+              >
+                <div className="flex h-40 w-full max-w-10 flex-col justify-end">
+                  <div
+                    className="bg-gray-300"
+                    style={{ height: `${hiddenHeight}%` }}
+                  />
+                  <div
+                    className="bg-black"
+                    style={{ height: `${visibleHeight}%` }}
+                  />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        <div className="mt-2 flex gap-3 px-4">
+          {histogramData.map(bucket => (
             <div
               key={bucket.label}
-              className="flex flex-1 flex-col items-center justify-end"
+              className="flex flex-1 flex-col items-center text-xs"
             >
-              <div className="flex h-40 w-full max-w-10 flex-col justify-end">
-                <div
-                  className="bg-gray-300"
-                  style={{ height: `${hiddenHeight}%` }}
-                  title={`${bucket.hidden} hidden routes`}
-                />
-
-                <div
-                  className="bg-black"
-                  style={{ height: `${visibleHeight}%` }}
-                  title={`${bucket.visible} visible routes`}
-                />
-              </div>
-
-              <div className="mt-2 text-xs">
-                {bucket.label}
-              </div>
-
-              <div className="text-xs text-gray-500">
+              <div>{bucket.label}</div>
+              <div className="text-gray-500">
                 {bucket.visible}/{bucket.total}
               </div>
             </div>
-          );
-        })}
+          ))}
+        </div>
       </div>
 
       <p className="mt-2 text-sm text-gray-600">
