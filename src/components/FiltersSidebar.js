@@ -1,5 +1,6 @@
 import { gradeConversion } from "@/utils/gradeConversion";
 import { useFilters } from "@/context/FiltersContext";
+import { useAuth } from "@/context/AuthContext";
 
 export default function FiltersSidebar({ filters, setFilters, mobile = false, mode="main" }) {
 
@@ -7,6 +8,8 @@ export default function FiltersSidebar({ filters, setFilters, mobile = false, mo
   const { setMobileFiltersVisible } = useFilters();
   const isDetailsMode = mode === "details";
   const travelFiltersDisabled = isDetailsMode;
+
+  const { user, loading: authLoading } = useAuth();
 
   function handleCheckboxChange(event) {
     const { name, checked } = event.target;
@@ -257,6 +260,8 @@ export default function FiltersSidebar({ filters, setFilters, mobile = false, mo
       </section>
       </div>
       
+      {user && (
+        <>
       {/* Region filter */}
       <section className={`mt-3 border-b pb-4 ${travelFiltersDisabled ? "pointer-events-none opacity-40" : ""}`}>
         <h3 className="text-xl font-semibold">Area</h3>
@@ -281,7 +286,8 @@ export default function FiltersSidebar({ filters, setFilters, mobile = false, mo
           Bergen
         </label>
       </section>
-      
+      </>
+      )}
     </aside>
   );
 }
