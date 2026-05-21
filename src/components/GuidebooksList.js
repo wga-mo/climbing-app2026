@@ -10,6 +10,8 @@ export default function GuidebooksList({ guidebooks }) {
 
   const singleBook = sortedBooks.length === 1;
 
+  console.log(guidebooks[0].guidebooks.name);
+
   return (
     <section className="mt-6">
       <h2 className="text-xl font-semibold">
@@ -18,8 +20,20 @@ export default function GuidebooksList({ guidebooks }) {
 
       <div className="mt-3 space-y-1">
         {sortedBooks.map(book => (
-          <div key={book.guidebook_id ?? book.page}>
-            • {book.guidebooks.name}
+          <div key={book.book_id}>
+            • {book.guidebooks.link ? (
+              
+        <a
+          href={book.guidebooks.link}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="underline hover:text-blue-600"
+        >
+          {book.guidebooks.name}
+        </a>
+      ) : (
+        book.guidebooks.name
+      )}
             {book.page && (
               <> — Page: {book.page}</>
             )}

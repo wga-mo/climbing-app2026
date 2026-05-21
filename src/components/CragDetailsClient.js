@@ -111,10 +111,12 @@ export default function CragDetailsClient({ cragId }) {
       const { data: guidebookData } = await supabase
         .from("link_crags_guidebooks")
         .select(`
+          book_id,
           page,
           primary_book,
           guidebooks (
-            name
+            name,
+            link
           )
         `)
         .eq("crag_id", cragId);

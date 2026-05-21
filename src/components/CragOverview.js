@@ -163,7 +163,8 @@ export default function CragOverview({
                 {crag.approach}
                 </p>
             </div>
- )}
+        )}
+        
         {children}
       </div>
 
