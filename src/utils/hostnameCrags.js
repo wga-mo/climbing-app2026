@@ -11,12 +11,12 @@ export function hostnameCrags() {
         //Oslo
         "climbing2026.vercel.app": {
         cragMin: 127,
-        cragMax: 149,
+        cragMax: 153,
         },
         
         //Drammen
         "klatring2026.vercel.app": {
-        cragMin: 150,
+        cragMin: 154,
         cragMax: 9999,
         },
     };
