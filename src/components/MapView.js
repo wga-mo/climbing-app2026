@@ -92,12 +92,12 @@ export default function MapView({
 
   return (
     <div
-  className={
-    detailView
-      ? "h-full w-full overflow-hidden rounded"
-      : "h-[calc(100vh-6rem)] w-full overflow-hidden rounded border"
-  }
->
+      className={
+        detailView
+          ? "h-full w-full overflow-hidden rounded"
+          : "h-[calc(100vh-6rem)] w-full overflow-hidden rounded border"
+      }
+    >
       <MapContainer
         center={[59.9139, 10.7522]}
         zoom={8}
@@ -142,7 +142,7 @@ export default function MapView({
             </Popup>
           </Marker>
         ))}
-      </MapContainer>
+          </MapContainer>
     </div>
   );
 }

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { hostnameCrags } from "@/utils/hostnameCrags";
 
 export function useCrags(filters) {
   const [crags, setCrags] = useState([]);
@@ -9,8 +10,7 @@ export function useCrags(filters) {
     async function fetchCrags() {
       setLoading(true);
 
-      const hostname = window.location.hostname;
-      console.log("Hostname:", hostname);
+      const { cragMin, cragMax } = hostnameCrags();
 
       const { data, error } = await supabase.rpc("crag_grade_summary", {
         grade_1_min: 1,
@@ -47,7 +47,13 @@ export function useCrags(filters) {
         console.error("Error fetching crag grade summary:", error);
         setCrags([]);
       } else {
-        setCrags(data || []);
+        const filteredData = (data || []).filter(
+          crag =>
+            crag.crag_id >= cragMin &&
+            crag.crag_id <= cragMax
+        );
+
+        setCrags(filteredData);
       }
       setLoading(false);
     }
