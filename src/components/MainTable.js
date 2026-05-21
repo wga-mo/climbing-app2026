@@ -7,7 +7,34 @@ export default function MainTable({ crags, loading, activeCragId, setActiveCragI
   console.log('test',crags);
   if (loading) return <p>Loading crags...</p>;
   
-  
+  const hostname = window.location.hostname;
+  console.log("Hostname:", hostname);
+
+  const SITE_CONFIG = {
+  localhost: {
+    cragMin: 1,
+    cragMax: 9999,
+  },
+
+  "climbing-app2026.vercel.app": {
+    cragMin: 127,
+    cragMax: 149,
+  },
+
+  "klatring-app2026.vercel.app": {
+    cragMin: 150,
+    cragMax: 9999,
+  },
+};
+
+const config =
+  SITE_CONFIG[hostname] ?? {
+    cragMin: 1,
+    cragMax: 9999,
+  };
+
+const { cragMin, cragMax } = config;
+
   if (!crags.length) return <p>No crags found.</p>;
 
   return (
@@ -27,7 +54,7 @@ export default function MainTable({ crags, loading, activeCragId, setActiveCragI
         </thead>
 
         <tbody>
-          {crags.map(crag => (
+          {crags.filter(crag => crag.crag_id > cragMin && crag.crag_id < cragMax).map(crag => ( 
             <tr
               key={crag.crag_id}
               onClick={() => router.push(`/details/${crag.crag_id}`)}

@@ -25,7 +25,7 @@ export default function CragDetailsClient({ cragId }) {
       const cragSource = user ? "crags" : "public_crag_preview";
       const sectorSource = user ? "sectors" : "public_sector_preview";
       const routeSource = user ? "routes" : "public_route_preview";
-        
+
       const { data: cragData, error: cragError } = await supabase
         .from(cragSource)
         .select(`

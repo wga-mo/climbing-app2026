@@ -9,6 +9,9 @@ export function useCrags(filters) {
     async function fetchCrags() {
       setLoading(true);
 
+      const hostname = window.location.hostname;
+      console.log("Hostname:", hostname);
+
       const { data, error } = await supabase.rpc("crag_grade_summary", {
         grade_1_min: 1,
         grade_1_max: 9,
