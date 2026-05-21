@@ -16,12 +16,12 @@ export default function MainTable({ crags, loading, activeCragId, setActiveCragI
     cragMax: 9999,
   },
 
-  "climbing-app2026.vercel.app": {
+  "nettforer.vercel.app": {
     cragMin: 127,
     cragMax: 149,
   },
 
-  "klatring-app2026.vercel.app": {
+  "klatring2026.vercel.app": {
     cragMin: 150,
     cragMax: 9999,
   },
