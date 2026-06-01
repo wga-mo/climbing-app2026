@@ -35,28 +35,30 @@ export function AuthProvider({ children }) {
     loadUser();
 
     const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_, session) => {
-      const currentUser = session?.user ?? null;
+  data: { subscription },
+} = supabase.auth.onAuthStateChange((_, session) => {
+  const currentUser = session?.user ?? null;
 
-      setUser(currentUser);
+  setUser(currentUser);
+  setLoading(false);
 
-      if (!currentUser) {
-        setProfile(null);
-        return;
-      }
+  if (!currentUser) {
+    setProfile(null);
+    return;
+  }
 
-      const { data: profileData } = await supabase
-        .from("profiles")
-        .select("username")
-        .eq("id", currentUser.id)
-        .single();
+  setTimeout(async () => {
+    const { data: profileData } = await supabase
+      .from("profiles")
+      .select("username")
+      .eq("id", currentUser.id)
+      .single();
 
-      setProfile(profileData);
-      setLoading(false);
-    });
+    setProfile(profileData);
+  }, 0);
+});
 
-    return () => subscription.unsubscribe();
+return () => subscription.unsubscribe();
   }, []);
 
   return (
