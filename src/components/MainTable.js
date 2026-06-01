@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 
 export default function MainTable({ crags, loading, activeCragId, setActiveCragId }) {
   const router = useRouter();
-  console.log('test',crags);
+  //console.log('test',crags);
   if (loading) return <p>Loading crags...</p>;
   
   

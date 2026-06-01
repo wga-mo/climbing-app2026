@@ -47,6 +47,25 @@ export default function CragOverview({
     return "?";
     }
 
+  // Calculate walking time range from sectors  
+  function walkingTime() { 
+    
+    const times = sectors.map(sector => Number(sector.walking_time)).filter((time) => Number.isFinite(time));
+    
+    if (times.length === 0) return "";
+
+    const min = Math.min(...times);
+    const max = Math.max(...times);
+
+    // If max is 0, it means walking time is not defined for any sector, so we can fall back to the crag-level walking time
+    if( max === 0 ) return `${crag.walking_time} min`;
+
+    if (min === max) {
+      return `${min} min`;
+    }
+    return `${min}-${max} min`;
+  }
+    
   const detailMarkers = [
     {
         id: `crag-${crag.crag_id}`,
@@ -71,7 +90,8 @@ export default function CragOverview({
 
   const items = [
     { icon: "🚗", value: `${crag.driving_time} min`, tooltip: `Driving time from ${crag.region}` },
-    { icon: "🚶", value: `${crag.walking_time} min`, tooltip: `Walking time` },
+    //{ icon: "🚶", value: `${crag.walking_time} min`, tooltip: `Walking time` },
+    { icon: "🚶", value: walkingTime(), tooltip: `Walking time` },
     { icon: "☂️", value: formatValue(crag.rainproof), tooltip: `Rainproof` },
     { icon: "⛺", value: formatValue(crag.campsite), tooltip: `Campsite` },
     { icon: "🏝️", value: formatValue(crag.bathing), tooltip: `Bathing` },

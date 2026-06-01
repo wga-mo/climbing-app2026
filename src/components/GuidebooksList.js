@@ -10,7 +10,7 @@ export default function GuidebooksList({ guidebooks }) {
 
   const singleBook = sortedBooks.length === 1;
 
-  console.log(guidebooks[0].guidebooks.name);
+  // console.log(guidebooks[0].guidebooks.name);
 
   return (
     <section className="mt-6">

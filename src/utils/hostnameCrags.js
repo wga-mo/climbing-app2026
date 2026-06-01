@@ -1,6 +1,6 @@
 export function hostnameCrags() {
     const hostname = window.location.hostname;
-    console.log("Hostname:", hostname);
+    // console.log("Hostname:", hostname);
 
     const SITE_CONFIG = {
         localhost: {

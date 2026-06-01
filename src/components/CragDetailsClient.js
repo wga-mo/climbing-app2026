@@ -14,7 +14,7 @@ export default function CragDetailsClient({ cragId }) {
   const [loading, setLoading] = useState(true);
 
   const { user, loading: authLoading } = useAuth();
-  console.log('user', user);
+  // console.log('user', user);
 
   useEffect(() => {
     if (authLoading) return;
@@ -76,8 +76,6 @@ export default function CragDetailsClient({ cragId }) {
         `)
         .eq("crag_id", cragId)
         .order("sector_in_crag");
-      
-        console.log(sectorSource, " - ", sectorData);
 
       if (sectorError || !sectorData) {
         console.log("Error fetching sector details:", sectorError);
