@@ -81,6 +81,8 @@ export default function CragDetailsClient({ cragId }) {
 
       if (sectorError || !sectorData) {
         console.log("Error fetching sector details:", sectorError);
+        setSectors([]);
+        setLoading(false);
         return;
       }
 
@@ -105,6 +107,8 @@ export default function CragDetailsClient({ cragId }) {
 
       if (routeError || !routeData) {
         console.log("Error fetching route details:", routeError);
+        setRoutes([]);
+        setLoading(false);
         return;
       }
 

@@ -55,9 +55,9 @@ export default function HomePage() {
     </main>
 
     {/* Mobile layout */}
-    <main className="flex flex-1 lg:hidden">
+    <main className="flex flex-1 min-h-0 overflow-hidden lg:hidden">
       {activeMobileView === "table" ? (
-        <section className="flex-1 overflow-auto p-4">
+        <section className="flex-1 min-h-0 min-w-0 overflow-auto p-4">
           <MainTable
             crags={crags}
             loading={loading}
@@ -66,7 +66,7 @@ export default function HomePage() {
           />
         </section>
       ) : (
-        <section className="flex-1 p-4">
+        <section className="flex-1 min-h-0 min-w-0 overflow-auto p-4">
           <MapView
             markers={markers}
             activeMarkerId={activeCragId}
