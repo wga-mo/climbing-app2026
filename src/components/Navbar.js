@@ -14,20 +14,25 @@ export default function Navbar() {
   const { user, profile } = useAuth();
 
   const [menuOpen, setMenuOpen] = useState(false);
-  const menuRef = useRef(null);
+  
+  const mobileMenuRef = useRef(null);
+  const desktopMenuRef = useRef(null);
 
   useEffect(() => {
     function handleClickOutside(event) {
-    if (menuRef.current && !menuRef.current.contains(event.target)) {
-      setMenuOpen(false);
+      const clickedInsideMobile = mobileMenuRef.current?.contains(event.target);
+      const clickedInsideDesktop = desktopMenuRef.current?.contains(event.target);
+
+      if (!clickedInsideMobile && !clickedInsideDesktop) {
+        setMenuOpen(false);
+      }
     }
-  }
+  
+    document.addEventListener("mousedown", handleClickOutside);
 
-  document.addEventListener("mousedown", handleClickOutside);
-
-  return () => {
-    document.removeEventListener("mousedown", handleClickOutside);
-  };
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
   }, []);
 
   const {
@@ -88,7 +93,7 @@ export default function Navbar() {
           </label>
 
           {user ? (
-            <div className="relative" ref={menuRef}>
+            <div className="relative" ref={mobileMenuRef}>
               <button
                 onClick={() => setMenuOpen(!menuOpen)}
                 className="flex h-9 w-9 items-center justify-center rounded-full border text-sm font-semibold"
@@ -142,7 +147,7 @@ export default function Navbar() {
         {/* Desktop screen setup */}
         <div className="hidden lg:block">
           {user ? (
-            <div className="relative" ref={menuRef}>
+            <div className="relative" ref={desktopMenuRef}>
               <button
                 onClick={() => setMenuOpen(!menuOpen)}
                 className="text-sm underline"
