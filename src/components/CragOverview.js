@@ -1,5 +1,6 @@
 import dynamic from "next/dynamic"; //trengs for map
 import { useRef, useEffect, useState } from "react";
+import { supabase } from "@/lib/supabase";
 
 
 export default function CragOverview({
@@ -10,6 +11,9 @@ export default function CragOverview({
 }) {
 
   const [showNavigationMenu, setShowNavigationMenu] = useState(false);
+  const [rightPanelView, setRightPanelView] = useState("map");
+  const [overviewImages, setOverviewImages] = useState([]);
+  const [fullscreenImage, setFullscreenImage] = useState(null);
   const navigationMenuRef = useRef(null);
 
   //useEffect brukes for å lukke Navigate menu når man klikker utenom menuen
@@ -35,6 +39,46 @@ export default function CragOverview({
       );
     };
   }, []);
+
+  //useEffect to load overview images if it/they exist(s) and set overviewExists to true if at least one overview image is found
+  useEffect(() => {
+  async function loadOverviews() {
+    if (!crag?.crag_id) return;
+
+    const folder = `crags/${crag.crag_id}`;
+
+    const { data: files, error } = await supabase.storage
+      .from("topos")
+      .list(folder);
+
+    if (error) return;
+
+    const overviewFiles = files.filter(file =>
+      file.name.startsWith("overview-")
+    );
+
+    const signedUrls = await Promise.all(
+      overviewFiles.map(async (file) => {
+        const path = `${folder}/${file.name}`;
+
+        const { data } = await supabase.storage
+          .from("topos")
+          .createSignedUrl(path, 3600);
+
+        return {
+          name: file.name,
+          url: data?.signedUrl,
+        };
+      })
+    );
+
+    setOverviewImages(
+      signedUrls.filter(img => img.url)
+    );
+  }
+
+  loadOverviews();
+}, [crag?.crag_id]);
 
   const MapView = dynamic(
     () => import("@/components/MapView"),
@@ -190,15 +234,76 @@ export default function CragOverview({
 
       {/* Right side: map */}
       <div className="flex flex-col rounded border p-4">
-        <h2 className="mb-3 text-xl font-semibold">
-          Map
-        </h2>
-
+        <div className="mb-3 flex items-center gap-4">
+          
+          {/* A Map button */}
+          <button
+            onClick={() => setRightPanelView("map")}
+            className={`text-xl font-semibold ${
+              rightPanelView === "map"
+                ? "text-black underline"
+                : "text-gray-500"
+            }`}
+          >
+            Map
+          </button>
+          
+          {/* One Overview button for each overview image */}
+          {overviewImages.map((img, index) => (
+            <button
+              key={img.name}
+              onClick={() => setRightPanelView(img.name)}
+              className={`text-xl font-semibold ${
+                rightPanelView === img.name
+                  ? "text-black underline"
+                  : "text-gray-500"
+              }`}
+            >
+              Overview {index + 1}
+            </button>
+          ))}
+        </div>
+        
         <div className="min-h-[300px] flex-1 overflow-hidden rounded">
-          <MapView
-            markers={detailMarkers}
-            detailView
-          />
+          
+          {rightPanelView === "map" ? (
+            <MapView
+              markers={detailMarkers}
+              detailView
+            />
+          ) : (
+            <img
+              src={overviewImages.find(img => img.name === rightPanelView)?.url}
+              alt="Overview"
+              onClick={() =>
+                setFullscreenImage(
+                  overviewImages.find(img => img.name === rightPanelView)?.url
+                )
+              }
+              className="h-full w-full cursor-zoom-in object-contain"
+            />
+          )}
+
+          {/* Fullscreen image overlay */}
+          {fullscreenImage && (
+            <div className="fixed inset-0 z-[9999] bg-black/90">
+              <button
+                onClick={() => setFullscreenImage(null)}
+                className="fixed right-4 top-4 z-[10000] rounded bg-white px-3 py-1 text-black"
+              >
+                Close
+              </button>
+
+              <div className="h-screen w-screen overflow-auto">
+                <img
+                  src={fullscreenImage}
+                  alt="Fullscreen overview"
+                  className="min-h-full min-w-full object-contain"
+                />
+              </div>
+            </div>
+          )}
+
         </div>
       </div>
     </section>
