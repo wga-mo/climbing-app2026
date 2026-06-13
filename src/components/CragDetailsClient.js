@@ -13,6 +13,9 @@ export default function CragDetailsClient({ cragId, sectorId = null }) {
   const [guidebooks, setGuidebooks] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  const [currentSector, setCurrentSector] = useState(null);
+  const [showSectorCards, setShowSectorCards] = useState(false);
+
   const { user, loading: authLoading } = useAuth();
   // console.log('user', user);
 
@@ -26,6 +29,7 @@ export default function CragDetailsClient({ cragId, sectorId = null }) {
       const sectorSource = user ? "sectors" : "public_sector_preview";
       const routeSource = user ? "routes" : "public_route_preview";
 
+      // Fetch crag data
       const { data: cragData, error: cragError } = await supabase
         .from(cragSource)
         .select(`
@@ -56,6 +60,7 @@ export default function CragDetailsClient({ cragId, sectorId = null }) {
         return;
       }
 
+      // Fetch sector data
       const { data: sectorData, error: sectorError } = await supabase
         .from(sectorSource)
         .select(`
@@ -72,11 +77,14 @@ export default function CragDetailsClient({ cragId, sectorId = null }) {
           comment,
           loc_lat,
           loc_long,
-          topo_extension
+          topo_extension,
+          parent_sector_id,
+          sector_type
         `)
         .eq("crag_id", cragId)
         .order("sector_in_crag");
 
+        
       if (sectorError || !sectorData) {
         console.log("Error fetching sector details:", sectorError);
         setSectors([]);
@@ -84,6 +92,40 @@ export default function CragDetailsClient({ cragId, sectorId = null }) {
         return;
       }
 
+      let displayedSectors = [];
+      let pageSector = null;
+      let shouldShowSectorCards = false;
+
+      if (sectorId) {
+        pageSector = sectorData.find(
+          (s) => s.sector_id === sectorId
+        );
+
+        displayedSectors = sectorData.filter(
+          (s) => s.parent_sector_id === sectorId
+        );
+
+        shouldShowSectorCards = false;
+      } else {
+        displayedSectors = sectorData.filter(
+          (s) => s.parent_sector_id === null
+        );
+
+        shouldShowSectorCards = displayedSectors.some(
+          (s) => s.sector_type === "sector"
+        );
+      }
+
+      console.log("Page sector:", pageSector);
+      console.log("Displayed sectors:", displayedSectors);
+
+      setCurrentSector(pageSector || null);
+      setSectors(displayedSectors);
+      setShowSectorCards(shouldShowSectorCards);
+
+      console.log("Show Sector Cards:", shouldShowSectorCards);
+
+      // Fetch route data
       const { data: routeData, error: routeError } = await supabase
         .from(routeSource)
         .select(`
@@ -110,6 +152,7 @@ export default function CragDetailsClient({ cragId, sectorId = null }) {
         return;
       }
 
+      // Fetch guidebook data
       const { data: guidebookData } = await supabase
         .from("link_crags_guidebooks")
         .select(`
@@ -153,9 +196,12 @@ export default function CragDetailsClient({ cragId, sectorId = null }) {
     <DetailsClientLayout>
       <CragDetailsContent
         crag={crag}
+        currentSector={currentSector}
         sectors={sectors}
         routes={routes}
         guidebooks={guidebooks}
+        sectorId={sectorId}
+        showSectorCards={showSectorCards}
       />
     </DetailsClientLayout>
   );

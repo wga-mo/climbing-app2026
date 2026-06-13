@@ -1,12 +1,17 @@
 import dynamic from "next/dynamic"; //trengs for map
 import { useRef, useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import GuidebooksList from "@/components/GuidebooksList";
+import GradeHistogram from "@/components/GradeHistogram";
 
 
 export default function CragOverview({
   crag,
+  pageInfo,
   sectors,
+  guidebooks,
   routes,
+  filters,
   children,
 }) {
 
@@ -54,6 +59,8 @@ export default function CragOverview({
     if (error) return;
 
     const overviewFiles = files.filter(file =>
+      // Vurder å gjøre endringer her hvis man i fremtiden ønsker å hente overview bilder relatert til sektoren. 
+      // Eks: pageInfo.type === 'sector' ? file.name.startsWith(`overview-sector-${sectorId}-`) : ...
       file.name.startsWith("overview-")
     );
 
@@ -149,9 +156,10 @@ export default function CragOverview({
       <div className="rounded border p-4">
         <div className="flex items-start justify-between gap-3">
           <h1 className="text-3xl font-bold">
-            {crag.crag_name}
+            {pageInfo.type === 'sector' ? 'Sector' : 'Crag'} {pageInfo.name}
           </h1>
 
+          {/* Navigation button and menu */}
           {parkingMarker && (
           <div className="relative shrink-0" ref={navigationMenuRef}>
             <button
@@ -193,42 +201,56 @@ export default function CragOverview({
           </div>
         )}
         </div>
-
-        <div className="mt-4 border-y">
+        
+        {/* Small table with crag information */}
+        {pageInfo.type === 'crag' && (
+          <div className="mt-4 border-y">
             <div className="grid grid-cols-6 text-center">
-                {items.map(item => (
-                <div key={item.icon} className="py-2" title={item.tooltip}>
-                    <div className="text-2xl">{item.icon}</div>
-                    <div className="mt-2 text-sm">{item.value}</div>
-                </div>
-                ))}
+              {items.map(item => (
+              <div key={item.icon} className="py-2" title={item.tooltip}>
+                <div className="text-2xl">{item.icon}</div>
+                <div className="mt-2 text-sm">{item.value}</div>
+              </div>
+              ))}
             </div>
-            </div>
+          </div>
+        )}
 
-        {crag.description && (
+        {pageInfo.description && (
           <div className="mt-6">
               <h2 className="text-xl font-semibold">
               Description
               </h2>
 
               <p className="mt-2 whitespace-pre-line">
-              {crag.description}
+              {pageInfo.description}
               </p>
           </div>
         )}
 
-        {crag.approach && (
+        {pageInfo.approach && (
             <div className="mt-6">
                 <h2 className="text-xl font-semibold">
                 Approach
                 </h2>
 
                 <p className="mt-2 whitespace-pre-line">
-                {crag.approach}
+                {pageInfo.approach}
                 </p>
             </div>
         )}
+
+        {pageInfo.type === 'crag' && (
+          <GuidebooksList guidebooks={guidebooks} />
+        )}
         
+        <div className="">
+          <GradeHistogram
+            routes={routes}
+            filters={filters}
+          />
+        </div>
+
         {children}
       </div>
 
