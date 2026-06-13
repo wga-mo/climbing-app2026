@@ -24,7 +24,7 @@ export default function HomePage() {
     lat: crag.loc_lat,
     lng: crag.loc_long,
     type: "crag",
-    href: `/details/${crag.crag_id}`,
+    href: `/crag/${crag.crag_id}`,
   }));
 
   return (

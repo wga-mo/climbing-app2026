@@ -30,7 +30,7 @@ export default function MainTable({ crags, loading, activeCragId, setActiveCragI
           {crags.map(crag => (
             <tr
               key={crag.crag_id}
-              onClick={() => router.push(`/details/${crag.crag_id}`)}
+              onClick={() => router.push(`/crag/${crag.crag_id}`)}
               onMouseEnter={() => setActiveCragId(crag.crag_id)}
               onMouseLeave={() => setActiveCragId(null)}
               className={`

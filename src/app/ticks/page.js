@@ -41,7 +41,7 @@ export default function TicksPage() {
       minWidth: 150,
       cellRenderer: params => (
         <Link
-          href={`/details/${params.data.crag_id}`}
+          href={`/crag/${params.data.crag_id}`}
           className="underline"
         >
           {params.value}
@@ -221,7 +221,7 @@ console.log('Gradehistogram:', gradeHistogram);
                 <td className="px-3 py-2">{tick.tick_date}</td>
                 <td className="px-3 py-2">
                   <Link
-                    href={`/details/${tick.crag_id}`}
+                    href={`/crag/${tick.crag_id}`}
                     className="underline"
                   >
                     {tick.route_name}
@@ -229,7 +229,7 @@ console.log('Gradehistogram:', gradeHistogram);
                 </td>
                 <td className="px-3 py-2">
                   <Link
-                    href={`/details/${tick.crag_id}`}
+                    href={`/crag/${tick.crag_id}`}
                     className="underline"
                   >
                     {tick.crag_name}

@@ -6,7 +6,7 @@ import CragDetailsContent from "@/components/CragDetailsContent";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/context/AuthContext";
 
-export default function CragDetailsClient({ cragId }) {
+export default function CragDetailsClient({ cragId, sectorId = null }) {
   const [crag, setCrag] = useState(null);
   const [sectors, setSectors] = useState([]);
   const [routes, setRoutes] = useState([]);
