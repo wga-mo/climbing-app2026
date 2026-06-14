@@ -5,7 +5,8 @@ export function doesRouteMatchFilters(route, filters) {
   }
   
   const styleMatch =
-    (filters.sport && route.style === "sport") ||
+    (filters.sport && 
+      ["sport", "topptau"].includes(route.style)) ||
     (filters.trad &&
       ["trad", "mix"].includes(route.style)) ||
     (filters.boulder &&

@@ -2,14 +2,15 @@
 
 import { useFilters } from "@/context/FiltersContext";
 import SectorRouteTables from "@/components/SectorRouteTables";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import CragOverview from "@/components/CragOverview";
+import GradeHistogram from "@/components/GradeHistogram";
 
 export default function CragDetailsContent({ 
   crag, 
   currentSector,
   sectors, 
+  allSectors,
   routes, 
   guidebooks,
   sectorId,
@@ -38,6 +39,38 @@ export default function CragDetailsContent({
         steepness: crag.steepness,
         type: 'crag'
       };
+
+  function getRoutesForSectorIds(routes, sectorIds) {
+    const sectorIdSet = new Set(sectorIds);
+
+    return routes.filter((route) =>
+      sectorIdSet.has(route.sector_id)
+    );
+  }
+
+  let histogramSectorIds = [];
+
+  if (showSectorCards) {
+    // card page: use child walls
+    histogramSectorIds = allSectors
+      .filter((s) =>
+        sectors.some(
+          (parent) =>
+            s.parent_sector_id === parent.sector_id
+        )
+      )
+      .map((s) => s.sector_id);
+  } else {
+    // normal page: use displayed sectors
+    histogramSectorIds = sectors.map(
+      (s) => s.sector_id
+    );
+  }
+
+  const visibleRoutes = getRoutesForSectorIds(
+    routes,
+    histogramSectorIds
+  );
 
   return (
     <>
@@ -78,32 +111,58 @@ export default function CragDetailsContent({
         pageInfo={pageInfo}
         sectors={sectors}
         guidebooks={guidebooks}
-        routes={routes}
+        routes={visibleRoutes}
         filters={filters}
       >
 
       </CragOverview>
 
       {showSectorCards ? (
+        
         <section className="p-4">
           <h2 className="mb-3 text-xl font-semibold">Sectors</h2>
 
           <div className="grid gap-3">
-            {sectors.map((sector) => (
-              <Link
-                key={sector.sector_id}
-                href={`/crag/${crag.crag_id}/sector/${sector.sector_id}`}
-                className="rounded border p-4 hover:bg-gray-50"
-              >
-                <h3 className="font-semibold">{sector.name}</h3>
+            {sectors.map((sector) => {
+              const childSectorIds = allSectors
+                .filter((s) => s.parent_sector_id === sector.sector_id)
+                .map((s) => s.sector_id);
 
-                {sector.description && (
-                  <p className="mt-2 text-sm text-gray-600">
-                    {sector.description}
+              const sectorRoutes = getRoutesForSectorIds(
+                routes,
+                childSectorIds
+              );
+
+              return (
+                <Link
+                  key={sector.sector_id}
+                  href={`/crag/${crag.crag_id}/sector/${sector.sector_id}`}
+                  className="rounded border p-4 hover:bg-gray-50"
+                >
+                  <h3 className="font-semibold">
+                    {sector.name}
+                  </h3>
+
+                  <p className="mt-1 text-sm text-gray-500">
+                    {sectorRoutes.length} routes
                   </p>
-                )}
-              </Link>
-            ))}
+
+                  {sector.description && (
+                    <p className="mt-2 text-sm text-gray-600">
+                      {sector.description}
+                    </p>
+                  )}
+                  {sectorRoutes.length > 0 && (
+                  <div className="">
+                            <GradeHistogram
+                              routes={sectorRoutes}
+                              filters={filters}
+                            />
+                          </div>
+                  )}
+                </Link>
+              );
+            })}
           </div>
         </section>
       ) : (

@@ -9,6 +9,7 @@ import { useAuth } from "@/context/AuthContext";
 export default function CragDetailsClient({ cragId, sectorId = null }) {
   const [crag, setCrag] = useState(null);
   const [sectors, setSectors] = useState([]);
+  const [allSectors, setAllSectors] = useState([]);
   const [routes, setRoutes] = useState([]);
   const [guidebooks, setGuidebooks] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -123,8 +124,6 @@ export default function CragDetailsClient({ cragId, sectorId = null }) {
       setSectors(displayedSectors);
       setShowSectorCards(shouldShowSectorCards);
 
-      console.log("Show Sector Cards:", shouldShowSectorCards);
-
       // Fetch route data
       const { data: routeData, error: routeError } = await supabase
         .from(routeSource)
@@ -167,7 +166,7 @@ export default function CragDetailsClient({ cragId, sectorId = null }) {
         .eq("crag_id", cragId);
 
       setCrag(cragData);
-      setSectors(sectorData || []);
+      setAllSectors(sectorData || []);
       setRoutes(routeData || []);
       setGuidebooks(guidebookData || []);
       setLoading(false);
@@ -198,6 +197,7 @@ export default function CragDetailsClient({ cragId, sectorId = null }) {
         crag={crag}
         currentSector={currentSector}
         sectors={sectors}
+        allSectors={allSectors}
         routes={routes}
         guidebooks={guidebooks}
         sectorId={sectorId}
