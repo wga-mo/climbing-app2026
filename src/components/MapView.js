@@ -164,12 +164,9 @@ export default function MapView({
                 {marker.label}
               </Tooltip>
             ) || (
-              <Tooltip
-                direction="top"
-                offset={[0, -10]}
-              >
+              <Popup>
                 {marker.label}
-              </Tooltip>
+              </Popup>
             )}
           </Marker>
         ))}
