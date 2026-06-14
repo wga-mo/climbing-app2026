@@ -88,8 +88,6 @@ export default function CragDetailsClient({ cragId, sectorId = null }) {
           approach,
           link,
           comment,
-          loc_lat,
-          loc_long,
           topo_extension,
           parent_sector_id,
           sector_type
