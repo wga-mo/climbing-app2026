@@ -48,6 +48,7 @@ export default function CragDetailsContent({
     );
   }
 
+  //Some histogram logic
   let histogramSectorIds = [];
 
   if (showSectorCards) {
