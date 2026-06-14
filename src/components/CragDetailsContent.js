@@ -13,6 +13,7 @@ export default function CragDetailsContent({
   allSectors,
   routes, 
   guidebooks,
+  locations,
   sectorId,
   showSectorCards
 }) {
@@ -112,6 +113,7 @@ export default function CragDetailsContent({
         pageInfo={pageInfo}
         sectors={sectors}
         guidebooks={guidebooks}
+        locations={locations}
         routes={visibleRoutes}
         filters={filters}
       >

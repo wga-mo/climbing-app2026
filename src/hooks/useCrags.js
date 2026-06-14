@@ -73,6 +73,7 @@ export function useCrags(filters) {
         ? "locations"
         : "public_location_preview";
 
+      // Fetch location data for the filtered crags (only crag locations, not sector or parking locations)
       const { data: locationData, error: locationError } = await supabase
         .from(locationSource)
         .select("location_id, crag_id, sector_id, type, lat, lng, comment")
@@ -84,13 +85,15 @@ export function useCrags(filters) {
         console.error("Error fetching locations:", locationError);
       }
 
+      // Create a map of crag_id to location for easy lookup
       const locationByCragId = new Map(
         (locationData || []).map(location => [
           location.crag_id,
           location,
         ])
       );
-
+      
+      // Merge location data into crag data
       const cragsWithLocations = filteredData.map(crag => ({
         ...crag,
         location: locationByCragId.get(crag.crag_id) || null,

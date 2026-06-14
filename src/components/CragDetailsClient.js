@@ -17,6 +17,8 @@ export default function CragDetailsClient({ cragId, sectorId = null }) {
   const [currentSector, setCurrentSector] = useState(null);
   const [showSectorCards, setShowSectorCards] = useState(false);
 
+  const [locations, setLocations] = useState([]);
+
   const { user, loading: authLoading } = useAuth();
   // console.log('user', user);
 
@@ -29,6 +31,7 @@ export default function CragDetailsClient({ cragId, sectorId = null }) {
       const cragSource = user ? "crags" : "public_crag_preview";
       const sectorSource = user ? "sectors" : "public_sector_preview";
       const routeSource = user ? "routes" : "public_route_preview";
+      const locationSource = user ? "locations" : "public_location_preview";
 
       // Fetch crag data
       const { data: cragData, error: cragError } = await supabase
@@ -45,11 +48,7 @@ export default function CragDetailsClient({ cragId, sectorId = null }) {
           rainproof,
           campsite,
           bathing,
-          buss_friendly,
-          loc_lat,
-          loc_long,
-          par_lat,
-          par_long
+          buss_friendly
         `)
         .eq("crag_id", cragId)
         .single();
@@ -59,6 +58,19 @@ export default function CragDetailsClient({ cragId, sectorId = null }) {
         setCrag(null);
         setLoading(false);
         return;
+      }
+
+      // Fetch location data for the crag
+      const { data: locationData, error: locationError } = await supabase
+        .from(locationSource)
+        .select("location_id, crag_id, sector_id, type, lat, lng, comment")
+        .eq("crag_id", cragId);
+
+      if (locationError) {
+        console.log("Error fetching locations:", locationError);
+        setLocations([]);
+      } else {
+        setLocations(locationData || []);
       }
 
       // Fetch sector data
@@ -173,7 +185,7 @@ export default function CragDetailsClient({ cragId, sectorId = null }) {
     }
 
     fetchDetails();
-  }, [cragId, user, authLoading]);
+  }, [cragId, sectorId, user, authLoading]);
 
   if (loading) {
     return (
@@ -200,6 +212,7 @@ export default function CragDetailsClient({ cragId, sectorId = null }) {
         allSectors={allSectors}
         routes={routes}
         guidebooks={guidebooks}
+        locations={locations}
         sectorId={sectorId}
         showSectorCards={showSectorCards}
       />

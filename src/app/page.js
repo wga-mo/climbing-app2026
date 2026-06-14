@@ -27,7 +27,7 @@ export default function HomePage() {
     type: "crag",
     href: `/crag/${crag.crag_id}`,
   }));
-  
+
   return (
   <>
     {/* Desktop layout */}

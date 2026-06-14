@@ -10,6 +10,7 @@ export default function CragOverview({
   pageInfo,
   sectors,
   guidebooks,
+  locations,
   routes,
   filters,
   children,
@@ -117,27 +118,46 @@ export default function CragOverview({
     return `${min}-${max} min`;
   }
     
-  const detailMarkers = [
-    {
-        id: `crag-${crag.crag_id}`,
-        label: crag.crag_name,
-        lat: crag.loc_lat,
-        lng: crag.loc_long,
-        type: "crag",
-    },
-    {
-        id: `parking-${crag.crag_id}`,
-        label: "Parking",
-        lat: crag.par_lat,
-        lng: crag.par_long,
-        type: "parking",
-    },
-  ].filter(marker => marker.lat && marker.lng);
+  const sectorById = new Map(
+    (sectors || []).map(sector => [
+      sector.sector_id,
+      sector,
+    ])
+  );
 
-  //parking - use first marker of type parking
-  const parkingMarker = detailMarkers.find(marker => marker.type === "parking");
-  const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${parkingMarker.lat},${parkingMarker.lng}`;
-  const appleMapsUrl = `https://maps.apple.com/?ll=${parkingMarker.lat},${parkingMarker.lng}&q=${encodeURIComponent(parkingMarker.label)}`;
+  const detailMarkers = (locations || [])
+    .filter(location => location.lat && location.lng)
+    .map(location => ({
+      id: `location-${location.location_id}`,
+      label:
+      location.type === "crag"
+        ? crag.crag_name
+        : location.type?.startsWith("parking")
+          ? "Parking"
+          : location.type === "sector" ||
+            location.type === "wall"
+              ? sectorById.get(location.sector_id)?.name || "Sector"
+              : location.type,
+      lat: location.lat,
+      lng: location.lng,
+      type: location.type,
+      href: location.sector_id && location.type === "sector" ? `/crag/${crag.crag_id}/sector/${location.sector_id}` : null,
+    }));
+
+  // Choose a marker for parking
+  const parkingMarker =
+  detailMarkers.find(marker => marker.type === "parking") ||
+  detailMarkers.find(marker =>
+    marker.type?.startsWith("parking")
+  );
+
+  const googleMapsUrl = parkingMarker
+    ? `https://www.google.com/maps/search/?api=1&query=${parkingMarker.lat},${parkingMarker.lng}`
+    : null;
+
+  const appleMapsUrl = parkingMarker
+    ? `https://maps.apple.com/?ll=${parkingMarker.lat},${parkingMarker.lng}&q=${encodeURIComponent(parkingMarker.label)}`
+    : null;
 
   const items = [
     { icon: "🚗", value: `${crag.driving_time} min`, tooltip: `Driving time from ${crag.region}` },

@@ -2,30 +2,47 @@
 
 import { useEffect, useMemo, useRef } from "react";
 import L from "leaflet";
-import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Popup, Tooltip, useMap } from "react-leaflet";
 import { useRouter } from "next/navigation";
 
-const defaultIcon = L.icon({
-  iconUrl: "/leaflet/marker-icon.png",
-  shadowUrl: "/leaflet/marker-shadow.png",
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-  shadowSize: [41, 41],
-});
+function getParkingLabel(type) {
+  if (type === "parking") return "P";
 
-const parkingIcon = L.icon({
-  iconUrl: "/leaflet/icon-parking.svg",
-  shadowUrl: "/leaflet/marker-shadow.png",
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-  shadowSize: [41, 41],
-});
+  const match = type.match(/^parking[-_](\d+)$/);
+  if (match) return `P${match[1]}`;
+
+  return "P";
+}
 
 function getMarkerIcon(marker) {
-  if (marker.type === "parking") {
-    return parkingIcon;
+  if (marker.type?.startsWith("parking")) {
+    return L.divIcon({
+      className: "custom-marker parking-marker",
+      html: `<span>${getParkingLabel(marker.type)}</span>`,
+      iconSize: [28, 28],
+      iconAnchor: [14, 28],
+      popupAnchor: [0, -28],
+    });
+  }
+
+  if (marker.type === "sector" || marker.type === "wall") {
+    return L.divIcon({
+      className: "custom-marker sector-marker",
+      html: `<span>S</span>`,
+      iconSize: [28, 28],
+      iconAnchor: [14, 28],
+      popupAnchor: [0, -28],
+    });
+  }
+
+  if (marker.type === "crag") {
+    return L.divIcon({
+      className: "custom-marker crag-marker",
+      html: `<span>C</span>`,
+      iconSize: [28, 28],
+      iconAnchor: [14, 28],
+      popupAnchor: [0, -28],
+    });
   }
 
   return defaultIcon;
@@ -75,20 +92,20 @@ export default function MapView({
   }, [activeMarkerId]);
 
   function ResizeMap() {
-  const map = useMap();
+    const map = useMap();
 
-  useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      if (map && map.getContainer()) {
-        map.invalidateSize();
-      }
-    }, 100);
+    useEffect(() => {
+      const timeoutId = setTimeout(() => {
+        if (map && map.getContainer()) {
+          map.invalidateSize();
+        }
+      }, 100);
 
-    return () => clearTimeout(timeoutId);
-  }, [map]);
+      return () => clearTimeout(timeoutId);
+    }, [map]);
 
-  return null;
-}
+    return null;
+  }
 
   return (
     <div
@@ -137,9 +154,23 @@ export default function MapView({
               },
             }}
           >
-            <Popup autoPan={false}>
-              {marker.label}
-            </Popup>
+            {marker.type === "sector"  && (
+              <Tooltip
+                permanent
+                direction="top"
+                offset={[0, -10]}
+                className="sector-label"
+              >
+                {marker.label}
+              </Tooltip>
+            ) || (
+              <Tooltip
+                direction="top"
+                offset={[0, -10]}
+              >
+                {marker.label}
+              </Tooltip>
+            )}
           </Marker>
         ))}
           </MapContainer>
