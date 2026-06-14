@@ -16,17 +16,18 @@ export default function HomePage() {
   const { filters, setFilters, activeMobileView, setActiveMobileView, mobileFiltersVisible, } = useFilters();
   const { crags, loading } = useCrags(filters);
   const [activeCragId, setActiveCragId] = useState(null);
+
   const markers = crags
-  .filter(crag => crag.loc_lat && crag.loc_long)
+  .filter(crag => crag.location?.lat && crag.location?.lng)
   .map(crag => ({
     id: crag.crag_id,
     label: crag.crag_name,
-    lat: crag.loc_lat,
-    lng: crag.loc_long,
+    lat: crag.location.lat,
+    lng: crag.location.lng,
     type: "crag",
     href: `/crag/${crag.crag_id}`,
   }));
-
+  
   return (
   <>
     {/* Desktop layout */}

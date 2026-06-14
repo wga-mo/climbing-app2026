@@ -1,12 +1,17 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { hostnameCrags } from "@/utils/hostnameCrags";
+import { useAuth } from "@/context/AuthContext";
 
 export function useCrags(filters) {
   const [crags, setCrags] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  const { user, loading: authLoading } = useAuth();
+
   useEffect(() => {
+    if (authLoading) return;
+
     async function fetchCrags() {
       setLoading(true);
 
@@ -46,20 +51,57 @@ export function useCrags(filters) {
       if (error) {
         console.error("Error fetching crag grade summary:", error);
         setCrags([]);
-      } else {
-        const filteredData = (data || []).filter(
-          crag =>
-            crag.crag_id >= cragMin &&
-            crag.crag_id <= cragMax
-        );
-
-        setCrags(filteredData);
+        setLoading(false);
+        return;
       }
+
+      const filteredData = (data || []).filter(
+        crag =>
+          crag.crag_id >= cragMin &&
+          crag.crag_id <= cragMax
+      );
+
+      const cragIds = filteredData.map(crag => crag.crag_id);
+
+      if (cragIds.length === 0) {
+        setCrags([]);
+        setLoading(false);
+        return;
+      }
+
+      const locationSource = user
+        ? "locations"
+        : "public_location_preview";
+
+      const { data: locationData, error: locationError } = await supabase
+        .from(locationSource)
+        .select("location_id, crag_id, sector_id, type, lat, lng, comment")
+        .in("crag_id", cragIds)
+        .is("sector_id", null)
+        .eq("type", "crag");
+
+      if (locationError) {
+        console.error("Error fetching locations:", locationError);
+      }
+
+      const locationByCragId = new Map(
+        (locationData || []).map(location => [
+          location.crag_id,
+          location,
+        ])
+      );
+
+      const cragsWithLocations = filteredData.map(crag => ({
+        ...crag,
+        location: locationByCragId.get(crag.crag_id) || null,
+      }));
+
+      setCrags(cragsWithLocations);
       setLoading(false);
     }
 
     fetchCrags();
-  }, [filters]);
+  }, [filters, user, authLoading]);
 
   return { crags, loading };
 }
