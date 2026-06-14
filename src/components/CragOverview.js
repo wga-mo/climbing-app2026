@@ -9,6 +9,7 @@ export default function CragOverview({
   crag,
   pageInfo,
   sectors,
+  allSectors,
   guidebooks,
   locations,
   routes,
@@ -119,7 +120,7 @@ export default function CragOverview({
   }
     
   const sectorById = new Map(
-    (sectors || []).map(sector => [
+    (allSectors || []).map(sector => [
       sector.sector_id,
       sector,
     ])

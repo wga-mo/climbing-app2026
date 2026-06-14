@@ -112,6 +112,7 @@ export default function CragDetailsContent({
         crag={crag}
         pageInfo={pageInfo}
         sectors={sectors}
+        allSectors={allSectors}
         guidebooks={guidebooks}
         locations={locations}
         routes={visibleRoutes}
