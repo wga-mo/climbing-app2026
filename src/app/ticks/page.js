@@ -8,18 +8,12 @@ import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/context/AuthContext";
 import { gradeConversion } from "@/utils/gradeConversion";
 
-
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-quartz.css";
 
 ModuleRegistry.registerModules([AllCommunityModule]);
 
-export default function TicksPage() {
-  const { user } = useAuth();
-  const [rowData, setRowData] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  function DashboardCard({ label, value }) {
+function DashboardCard({ label, value }) {
   return (
     <div className="rounded border bg-white p-3 shadow-sm">
       <div className="text-sm text-gray-500">{label}</div>
@@ -27,6 +21,23 @@ export default function TicksPage() {
     </div>
   );
 }
+
+export default function TicksPage() {
+  const { user } = useAuth();
+
+  const [rowData, setRowData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [timeFilter, setTimeFilter] = useState("thisYear");
+  const [showAttempts, setShowAttempts] = useState(false);
+  const [showClimbed, setShowClimbed] = useState(false);
+
+  const cleanSendTypes = [
+    "onsight",
+    "flash",
+    "redpoint",
+    "repeat",
+  ];
+
   const columnDefs = useMemo(() => [
     {
       field: "tick_date",
@@ -55,9 +66,19 @@ export default function TicksPage() {
       minWidth: 150,
     },
     {
+      field: "grade",
+      headerName: "Grade",
+      width: 100,
+    },
+    {
       field: "tick_type",
       headerName: "Type",
       width: 130,
+    },
+    {
+      field: "belayer",
+      headerName: "Belayer",
+      width: 140,
     },
     {
       field: "note",
@@ -83,6 +104,7 @@ export default function TicksPage() {
           tick_id,
           tick_date,
           tick_type,
+          belayer,
           note,
           routes (
             route_id,
@@ -98,7 +120,7 @@ export default function TicksPage() {
         .order("tick_date", { ascending: false });
 
       if (error) {
-        console.error('Error fetching ticks:', error);
+        console.error("Error fetching ticks:", error);
         setLoading(false);
         return;
       }
@@ -107,9 +129,11 @@ export default function TicksPage() {
         tick_id: tick.tick_id,
         tick_date: tick.tick_date,
         tick_type: tick.tick_type,
+        belayer: tick.belayer,
         note: tick.note,
         route_id: tick.routes?.route_id,
         route_name: tick.routes?.name || "Unknown route",
+        grade_int: tick.routes?.grade_int,
         grade: gradeConversion(tick.routes?.grade_int) || "Unknown grade",
         crag_id: tick.routes?.crag_id,
         crag_name: tick.routes?.crags?.crag_name || "Unknown crag",
@@ -130,133 +154,286 @@ export default function TicksPage() {
     return <main className="p-4">Loading ticks...</main>;
   }
 
-  const recentTicks = rowData.slice(0, 10);
+  function isInSelectedTimePeriod(row) {
+    if (!row.tick_date) return false;
+    if (timeFilter === "all") return true;
 
-const totalTicks = rowData.length;
+    const tickDate = new Date(row.tick_date);
+    const now = new Date();
 
-const uniqueRoutes = new Set(
-  rowData.map(row => row.route_id).filter(Boolean)
-).size;
+    if (timeFilter === "thisYear") {
+      return tickDate.getFullYear() === now.getFullYear();
+    }
 
-const currentYear = new Date().getFullYear();
+    if (timeFilter === "thisMonth") {
+      return (
+        tickDate.getFullYear() === now.getFullYear() &&
+        tickDate.getMonth() === now.getMonth()
+      );
+    }
 
-const ticksThisYear = rowData.filter(row => {
-  if (!row.tick_date) return false;
-  return new Date(row.tick_date).getFullYear() === currentYear;
-}).length;
+    return true;
+  }
 
-const mostRecentDate = rowData[0]?.tick_date || "-";
+  const timeFilteredRows = rowData.filter(isInSelectedTimePeriod);
 
-const gradeCounts = rowData.reduce((acc, row) => {
-  if (!row.grade) return acc;
-  acc[row.grade] = (acc[row.grade] || 0) + 1;
-  return acc;
-}, {});
-console.log('Grade counts:', gradeCounts);
-const gradeHistogram = Object.entries(gradeCounts)
-  .map(([grade, count]) => ({ grade, count }))
-  .sort((a, b) => a.grade.localeCompare(b.grade, "no", { numeric: true }));
+  const attemptRows = timeFilteredRows.filter(
+    row => row.tick_type === "attempt"
+  );
+
+  const climbedRows = timeFilteredRows.filter(
+    row => row.tick_type === "climbed"
+  );
+
+  const visibleRows = timeFilteredRows.filter(row => {
+    if (cleanSendTypes.includes(row.tick_type)) return true;
+    if (row.tick_type === "attempt") return showAttempts;
+    if (row.tick_type === "climbed") return showClimbed;
+    return false;
+  });
+
+  const recentTicks = visibleRows.slice(0, 10);
+
+  const totalTicks = visibleRows.length;
+
+  const uniqueRoutes = new Set(
+    visibleRows.map(row => row.route_id).filter(Boolean)
+  ).size;
+
+  const mostRecentDate = visibleRows[0]?.tick_date || "-";
+
+  const tickTypes = [
+    "onsight",
+    "flash",
+    "redpoint",
+    "repeat",
+    ...(showClimbed ? ["climbed"] : []),
+    ...(showAttempts ? ["attempt"] : []),
+  ];
+
+  const tickTypeColors = {
+    onsight: "bg-green-500",
+    flash: "bg-blue-500",
+    redpoint: "bg-red-500",
+    repeat: "bg-purple-400",
+    climbed: "bg-yellow-400",
+    attempt: "bg-gray-400",
+  };
+
+  const gradeHistogram = Object.values(
+    visibleRows.reduce((acc, row) => {
+      if (
+        !row.grade ||
+        row.grade === "Unknown grade" ||
+        row.grade_int == null
+      ) {
+        return acc;
+      }
+
+      if (!acc[row.grade_int]) {
+        acc[row.grade_int] = {
+          grade: row.grade,
+          grade_int: row.grade_int,
+          total: 0,
+          counts: {},
+        };
+      }
+
+      acc[row.grade_int].total += 1;
+      acc[row.grade_int].counts[row.tick_type] =
+        (acc[row.grade_int].counts[row.tick_type] || 0) + 1;
+
+      return acc;
+    }, {})
+  ).sort((a, b) => a.grade_int - b.grade_int);
 
   const maxGradeCount = Math.max(
-  ...gradeHistogram.map(item => item.count),
-  1
-);
-console.log('Gradehistogram:', gradeHistogram);
+    ...gradeHistogram.map(item => item.total),
+    1
+  );
+
   return (
-  <main className="h-full overflow-auto p-4">
-    <h1 className="text-2xl font-semibold">My ticks</h1>
+    <main className="h-full overflow-auto p-4">
+      <h1 className="text-2xl font-semibold">My ticks</h1>
 
-    <section className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-4">
-      <DashboardCard label="Total ticks" value={totalTicks} />
-      <DashboardCard label="This year" value={ticksThisYear} />
-      <DashboardCard label="Unique routes" value={uniqueRoutes} />
-      <DashboardCard label="Latest tick" value={mostRecentDate} />
-    </section>
+      <div className="mt-3 flex flex-wrap items-center gap-4">
+        <label className="flex items-center gap-2 text-sm">
+          Period
+          <select
+            value={timeFilter}
+            onChange={(e) => setTimeFilter(e.target.value)}
+            className="rounded border px-2 py-1 text-sm"
+          >
+            <option value="thisMonth">This month</option>
+            <option value="thisYear">This year</option>
+            <option value="all">All</option>
+          </select>
+        </label>
 
-    <section className="mt-6">
-      <h2 className="text-lg font-semibold">Ticks by grade</h2>
-      
-      <div className="mt-3 space-y-2">
-        {gradeHistogram.map(item => (
-          <div key={item.grade} className="flex items-center gap-3">
-            <div className="w-12 text-sm">{item.grade}</div>
+        <label className="flex items-center gap-2 text-sm">
+          <input
+            type="checkbox"
+            checked={showClimbed}
+            onChange={(e) => setShowClimbed(e.target.checked)}
+          />
+          Show climbed
+        </label>
 
-            <div className="h-5 flex-1 rounded bg-gray-100">
-              <div
-                className="h-5 rounded bg-gray-400"
-                style={{
-                  width: `${(item.count / maxGradeCount) * 100}%`,
-                }}
-              />
+        <label className="flex items-center gap-2 text-sm">
+          <input
+            type="checkbox"
+            checked={showAttempts}
+            onChange={(e) => setShowAttempts(e.target.checked)}
+          />
+          Show attempts
+        </label>
+      </div>
+
+      <section className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-5">
+        <DashboardCard label="Ticks shown" value={totalTicks} />
+        <DashboardCard label="Unique routes" value={uniqueRoutes} />
+        <DashboardCard label="Climbed" value={climbedRows.length} />
+        <DashboardCard label="Attempts" value={attemptRows.length} />
+        <DashboardCard label="Latest tick" value={mostRecentDate} />
+      </section>
+
+      <section className="mt-6">
+        <h2 className="text-lg font-semibold">Ticks by grade</h2>
+
+        <div className="mt-2 flex flex-wrap gap-3 text-xs text-gray-600">
+          {tickTypes.map(type => (
+            <div key={type} className="flex items-center gap-1">
+              <span className={`h-3 w-3 rounded ${tickTypeColors[type]}`} />
+              <span className="capitalize">{type}</span>
             </div>
+          ))}
+        </div>
 
-            <div className="w-8 text-right text-sm">{item.count}</div>
-          </div>
-        ))}
-      </div>
-    </section>
+        {gradeHistogram.length === 0 ? (
+          <p className="mt-3 text-sm text-gray-500">
+            No ticks in this selection.
+          </p>
+        ) : (
+          <div className="mt-3 space-y-2">
+            {gradeHistogram.map(item => (
+              <div key={item.grade_int} className="flex items-center gap-3">
+                <div className="w-16 text-sm">{item.grade}</div>
 
-    <section className="mt-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold">Recent ticks</h2>
-        <a href="#all-ticks" className="text-sm underline">
-          Show all
-        </a>
-      </div>
-
-      <div className="mt-2 overflow-x-auto rounded border">
-        <table className="w-full text-sm">
-          <thead className="bg-gray-100">
-            <tr>
-              <th className="px-3 py-2 text-left">Date</th>
-              <th className="px-3 py-2 text-left">Route</th>
-              <th className="px-3 py-2 text-left">Crag</th>
-              <th className="px-3 py-2 text-left">Grade</th>
-              <th className="px-3 py-2 text-left">Type</th>
-            </tr>
-          </thead>
-          <tbody>
-            {recentTicks.map(tick => (
-              <tr key={tick.tick_id} className="border-t">
-                <td className="px-3 py-2">{tick.tick_date}</td>
-                <td className="px-3 py-2">
-                  <Link
-                    href={`/crag/${tick.crag_id}`}
-                    className="underline"
+                <div className="h-5 flex-1 overflow-hidden rounded bg-gray-100">
+                  <div
+                    className="flex h-5"
+                    style={{
+                      width: `${(item.total / maxGradeCount) * 100}%`,
+                    }}
                   >
-                    {tick.route_name}
-                  </Link>
-                </td>
-                <td className="px-3 py-2">
-                  <Link
-                    href={`/crag/${tick.crag_id}`}
-                    className="underline"
-                  >
-                    {tick.crag_name}
-                  </Link>
-                </td>
-                <td className="px-3 py-2">{tick.grade || "-"}</td>
-                <td className="px-3 py-2">{tick.tick_type}</td>
-              </tr>
+                    {tickTypes.map(type => {
+                      const count = item.counts[type] || 0;
+                      if (count === 0) return null;
+
+                      return (
+                        <div
+                          key={type}
+                          className={tickTypeColors[type]}
+                          style={{
+                            width: `${(count / item.total) * 100}%`,
+                          }}
+                          title={`${type}: ${count}`}
+                        />
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div className="w-8 text-right text-sm">
+                  {item.total}
+                </div>
+              </div>
             ))}
-          </tbody>
-        </table>
-      </div>
-    </section>
+          </div>
+        )}
+      </section>
 
-    <section id="all-ticks" className="mt-8">
-      <h2 className="text-lg font-semibold">All ticks</h2>
+      <section className="mt-6">
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-semibold">Recent ticks</h2>
+          <a href="#all-ticks" className="text-sm underline">
+            Show all
+          </a>
+        </div>
 
-      <div className="ag-theme-quartz mt-4 h-[70vh] w-full">
-        <AgGridReact
-          rowData={rowData}
-          columnDefs={columnDefs}
-          defaultColDef={defaultColDef}
-          pagination={true}
-          paginationPageSize={20}
-        />
-      </div>
-    </section>
-  </main>
-);
+        <div className="mt-2 overflow-x-auto rounded border">
+          <table className="w-full text-sm">
+            <thead className="bg-gray-100">
+              <tr>
+                <th className="px-3 py-2 text-left">Date</th>
+                <th className="px-3 py-2 text-left">Route</th>
+                <th className="px-3 py-2 text-left">Crag</th>
+                <th className="px-3 py-2 text-left">Grade</th>
+                <th className="px-3 py-2 text-left">Type</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {recentTicks.map(tick => (
+                <tr key={tick.tick_id} className="border-t">
+                  <td className="px-3 py-2">{tick.tick_date}</td>
+
+                  <td className="px-3 py-2">
+                    <Link
+                      href={`/crag/${tick.crag_id}`}
+                      className="underline"
+                    >
+                      {tick.route_name}
+                    </Link>
+                  </td>
+
+                  <td className="px-3 py-2">
+                    <Link
+                      href={`/crag/${tick.crag_id}`}
+                      className="underline"
+                    >
+                      {tick.crag_name}
+                    </Link>
+                  </td>
+
+                  <td className="px-3 py-2">
+                    {tick.grade || "-"}
+                  </td>
+
+                  <td className="px-3 py-2 capitalize">
+                    {tick.tick_type}
+                  </td>
+                </tr>
+              ))}
+
+              {recentTicks.length === 0 && (
+                <tr>
+                  <td
+                    colSpan="5"
+                    className="px-3 py-4 text-center text-sm text-gray-500"
+                  >
+                    No ticks in this selection.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="all-ticks" className="mt-8">
+        <h2 className="text-lg font-semibold">All ticks</h2>
+
+        <div className="ag-theme-quartz mt-4 h-[70vh] w-full">
+          <AgGridReact
+            rowData={visibleRows}
+            columnDefs={columnDefs}
+            defaultColDef={defaultColDef}
+            pagination={true}
+            paginationPageSize={20}
+          />
+        </div>
+      </section>
+    </main>
+  );
 }

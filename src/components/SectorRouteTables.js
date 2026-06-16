@@ -24,6 +24,8 @@ export default function SectorRouteTables({ sectors, routes }) {
   const [tickDate, setTickDate] = useState(
       new Date().toISOString().slice(0, 10)
   );
+  const [belayer, setBelayer] = useState("");
+  const [editingTickId, setEditingTickId] = useState(null);
 
   //Load ticks for current user
   useEffect(() => {
@@ -32,7 +34,7 @@ export default function SectorRouteTables({ sectors, routes }) {
 
       const { data, error } = await supabase
         .from("ticks")
-        .select("tick_id, route_id, route_id, tick_type, tick_date, note, created_at" )
+        .select("tick_id, route_id, route_id, tick_type, tick_date, belayer, note, created_at" )
         .eq("user_id", user.id)
         .order("tick_date", { ascending: false });
 
@@ -48,8 +50,21 @@ export default function SectorRouteTables({ sectors, routes }) {
   }, [user]);
 
   const tickCounts = ticks.reduce((acc, tick) => {
-    acc[tick.route_id] =
-      (acc[tick.route_id] || 0) + 1;
+    if (!acc[tick.route_id]) {
+      acc[tick.route_id] = {
+        sends: 0,
+        projected: false,
+      };
+    }
+
+    if (
+      tick.tick_type === "attempt" ||
+      tick.tick_type === "climbed"
+    ) {
+      acc[tick.route_id].projected = true;
+    } else {
+      acc[tick.route_id].sends += 1;
+    }
 
     return acc;
   }, {});
@@ -61,39 +76,88 @@ export default function SectorRouteTables({ sectors, routes }) {
     )
   : [];
 
+  function startEditTick(tick) {
+    setEditingTickId(tick.tick_id);
+    setTickDate(tick.tick_date);
+    setTickType(tick.tick_type);
+    setBelayer(tick.belayer || "");
+    setNote(tick.note || "");
+  }
+
+  function resetTickForm() {
+    setEditingTickId(null);
+    setTickDate(new Date().toISOString().slice(0, 10));
+    setTickType("climbed");
+    setBelayer("");
+    setNote("");
+  }
+
+  function cancelEditTick() {
+    resetTickForm();
+  }
+
+  function closeTickModal() {
+    setSelectedRoute(null);
+    resetTickForm();
+  }
+
   async function submitTick() {
     if (!user || !selectedRoute) return;
 
-    const { error } = await supabase
-      .from("ticks")
-      .insert({
-        user_id: user.id,
-        route_id: selectedRoute.route_id,
-        tick_type: tickType,
-        tick_date: tickDate,
-        note,
-      });
+    const tickData = {
+      tick_type: tickType,
+      tick_date: tickDate,
+      belayer: belayer || null,
+      note: note || null,
+    };
 
-    if (error) {
-      console.error(error);
-      setToast("Could not save tick");
-      return;
+    if (editingTickId) {
+      const { data, error } = await supabase
+        .from("ticks")
+        .update(tickData)
+        .eq("tick_id", editingTickId)
+        .eq("user_id", user.id)
+        .select()
+        .single();
+
+      if (error) {
+        console.error(error);
+        setToast("Could not update tick");
+        return;
+      }
+
+      setTicks(prev =>
+        prev.map(tick =>
+          tick.tick_id === editingTickId ? data : tick
+        )
+      );
+
+      setToast("Tick updated");
+    } else {
+      const { data, error } = await supabase
+        .from("ticks")
+        .insert({
+          user_id: user.id,
+          route_id: selectedRoute.route_id,
+          route_name: selectedRoute.name,
+          crag_id: sectors[0]?.crag_id,
+          ...tickData,
+        })
+        .select()
+        .single();
+
+      if (error) {
+        console.error(error);
+        setToast("Could not save tick");
+        return;
+      }
+
+      setTicks(prev => [data, ...prev]);
+      setToast("Tick saved");
     }
 
-    setTicks(prev => [
-      ...prev,
-      {
-        route_id: selectedRoute.route_id,
-        tick_type: tickType,
-        tick_date: tickDate,
-        note,
-      },
-    ]);
-
     setSelectedRoute(null);
-    setNote("");
-    setTickType("climbed");
-    setToast("Tick saved");
+    resetTickForm();
 
     setTimeout(() => setToast(""), 2500);
   }
@@ -183,7 +247,18 @@ export default function SectorRouteTables({ sectors, routes }) {
                           onClick={() => setSelectedRoute(route)}
                           className="rounded border px-2 py-1 text-xs hover:bg-gray-100"
                         >
-                          {tickCounts[route.route_id] ? `+ (${tickCounts[route.route_id]})` : "+"}
+                          {(() => {
+                            const tickInfo =
+                              tickCounts[route.route_id];
+
+                            if (!tickInfo) return "+";
+
+                            if (tickInfo.sends > 0) {
+                              return `+ (${tickInfo.sends})`;
+                            }
+
+                            return "+ (0)";
+                          })()}
                         </button>
                       )}
                     </td>
@@ -202,9 +277,14 @@ export default function SectorRouteTables({ sectors, routes }) {
         setTickDate={setTickDate}
         tickType={tickType}
         setTickType={setTickType}
+        belayer={belayer}
+        setBelayer={setBelayer}
         note={note}
         setNote={setNote}
-        onCancel={() => setSelectedRoute(null)}
+        editingTickId={editingTickId}
+        onEditTick={startEditTick}
+        onCancelEdit={cancelEditTick}
+        onClose={closeTickModal}
         onSubmit={submitTick}
       />
 
