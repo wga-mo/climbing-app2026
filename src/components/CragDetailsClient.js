@@ -22,16 +22,18 @@ export default function CragDetailsClient({ cragId, sectorId = null }) {
   const { user, loading: authLoading } = useAuth();
   // console.log('user', user);
 
+  const userId = user?.id ?? null;
+
   useEffect(() => {
     if (authLoading) return;
 
     async function fetchDetails() {
       setLoading(true);
 
-      const cragSource = user ? "crags" : "public_crag_preview";
-      const sectorSource = user ? "sectors" : "public_sector_preview";
-      const routeSource = user ? "routes" : "public_route_preview";
-      const locationSource = user ? "locations" : "public_location_preview";
+      const cragSource = userId ? "crags" : "public_crag_preview";
+      const sectorSource = userId ? "sectors" : "public_sector_preview";
+      const routeSource = userId ? "routes" : "public_route_preview";
+      const locationSource = userId ? "locations" : "public_location_preview";
 
       // Fetch crag data
       const { data: cragData, error: cragError } = await supabase
@@ -183,7 +185,7 @@ export default function CragDetailsClient({ cragId, sectorId = null }) {
     }
 
     fetchDetails();
-  }, [cragId, sectorId, user, authLoading]);
+  }, [cragId, sectorId, userId, authLoading]);
 
   if (loading) {
     return (

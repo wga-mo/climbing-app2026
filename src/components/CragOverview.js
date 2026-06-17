@@ -1,9 +1,13 @@
 import dynamic from "next/dynamic"; //trengs for map
-import { useRef, useEffect, useState } from "react";
+import { useRef, useEffect, useState, useMemo } from "react";
 import { supabase } from "@/lib/supabase";
 import GuidebooksList from "@/components/GuidebooksList";
 import GradeHistogram from "@/components/GradeHistogram";
 
+  const MapView = dynamic(
+    () => import("@/components/MapView"),
+    { ssr: false }
+  );
 
 export default function CragOverview({
   crag,
@@ -89,10 +93,7 @@ export default function CragOverview({
   loadOverviews();
 }, [crag?.crag_id]);
 
-  const MapView = dynamic(
-    () => import("@/components/MapView"),
-    { ssr: false }
-  );
+
 
   function formatValue(value) {
     if (value === 1) return "yes";
@@ -126,24 +127,36 @@ export default function CragOverview({
     ])
   );
 
-  const detailMarkers = (locations || [])
-    .filter(location => location.lat && location.lng)
-    .map(location => ({
-      id: `location-${location.location_id}`,
-      label:
-      location.type === "crag"
-        ? crag.crag_name
-        : location.type?.startsWith("parking")
-          ? "Parking"
-          : location.type === "sector" ||
-            location.type === "wall"
-              ? sectorById.get(location.sector_id)?.name || "Sector"
-              : location.type,
-      lat: location.lat,
-      lng: location.lng,
-      type: location.type,
-      href: location.sector_id && location.type === "sector" ? `/crag/${crag.crag_id}/sector/${location.sector_id}` : null,
-    }));
+  const detailMarkers = useMemo(() => {
+  const sectorById = new Map(
+      (allSectors || []).map(sector => [
+        sector.sector_id,
+        sector,
+      ])
+    );
+
+    return (locations || [])
+      .filter(location => location.lat && location.lng)
+      .map(location => ({
+        id: `location-${location.location_id}`,
+        label:
+          location.type === "crag"
+            ? crag.crag_name
+            : location.type?.startsWith("parking")
+              ? "Parking"
+              : location.type === "sector" ||
+                location.type === "wall"
+                  ? sectorById.get(location.sector_id)?.name || "Sector"
+                  : location.type,
+        lat: location.lat,
+        lng: location.lng,
+        type: location.type,
+        href:
+          location.sector_id && location.type === "sector"
+            ? `/crag/${crag.crag_id}/sector/${location.sector_id}`
+            : null,
+      }));
+  }, [locations, allSectors, crag.crag_id, crag.crag_name]);
 
   // Choose a marker for parking
   const parkingMarker =

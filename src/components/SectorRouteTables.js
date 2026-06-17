@@ -27,6 +27,8 @@ export default function SectorRouteTables({ sectors, routes }) {
   const [belayer, setBelayer] = useState("");
   const [editingTickId, setEditingTickId] = useState(null);
 
+  const userId = user?.id ?? null;
+
   //Load ticks for current user
   useEffect(() => {
     async function loadTicks() {
@@ -35,7 +37,7 @@ export default function SectorRouteTables({ sectors, routes }) {
       const { data, error } = await supabase
         .from("ticks")
         .select("tick_id, route_id, route_id, tick_type, tick_date, belayer, note, created_at" )
-        .eq("user_id", user.id)
+        .eq("user_id", userId)
         .order("tick_date", { ascending: false });
 
       if (error) {
@@ -47,7 +49,7 @@ export default function SectorRouteTables({ sectors, routes }) {
     }
 
     loadTicks();
-  }, [user]);
+  }, [userId]);
 
   const tickCounts = ticks.reduce((acc, tick) => {
     if (!acc[tick.route_id]) {
@@ -102,7 +104,7 @@ export default function SectorRouteTables({ sectors, routes }) {
   }
 
   async function submitTick() {
-    if (!user || !selectedRoute) return;
+    if (!userId || !selectedRoute) return;
 
     const tickData = {
       tick_type: tickType,
@@ -116,7 +118,7 @@ export default function SectorRouteTables({ sectors, routes }) {
         .from("ticks")
         .update(tickData)
         .eq("tick_id", editingTickId)
-        .eq("user_id", user.id)
+        .eq("user_id", userId)
         .select()
         .single();
 
@@ -137,7 +139,7 @@ export default function SectorRouteTables({ sectors, routes }) {
       const { data, error } = await supabase
         .from("ticks")
         .insert({
-          user_id: user.id,
+          user_id: userId,
           route_id: selectedRoute.route_id,
           route_name: selectedRoute.name,
           crag_id: sectors[0]?.crag_id,

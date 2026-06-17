@@ -8,6 +8,7 @@ export function useCrags(filters) {
   const [loading, setLoading] = useState(true);
 
   const { user, loading: authLoading } = useAuth();
+  const userId = user?.id ?? null;
 
   useEffect(() => {
     if (authLoading) return;
@@ -69,7 +70,7 @@ export function useCrags(filters) {
         return;
       }
 
-      const locationSource = user
+      const locationSource = userId
         ? "locations"
         : "public_location_preview";
 
@@ -104,7 +105,7 @@ export function useCrags(filters) {
     }
 
     fetchCrags();
-  }, [filters, user, authLoading]);
+  }, [filters, userId, authLoading]);
 
   return { crags, loading };
 }
