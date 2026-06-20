@@ -1,7 +1,7 @@
 'use client';
 
 import { useFilters } from "@/context/FiltersContext";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/lib/supabase";
@@ -12,6 +12,12 @@ export default function Navbar() {
   //Auth-profile related
   const router = useRouter();
   const { user, profile } = useAuth();
+
+  //Login redirect related
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const currentPath =  pathname + (searchParams.toString() ? `?${searchParams.toString()}` : "");
+  const loginHref = `/login?next=${encodeURIComponent(currentPath)}`;
 
   const [menuOpen, setMenuOpen] = useState(false);
   
@@ -136,7 +142,7 @@ export default function Navbar() {
             </div>
           ) : (
             <Link
-              href="/login"
+              href={loginHref}
               className="rounded border px-3 py-1 text-sm"
             >
               Log in
@@ -189,7 +195,7 @@ export default function Navbar() {
           ) : (
             
             <Link
-              href="/login"
+              href={loginHref}
               className="rounded-md border px-3 py-1 text-sm"
             >
               Log in
