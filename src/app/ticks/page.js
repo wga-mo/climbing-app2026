@@ -52,7 +52,7 @@ export default function TicksPage() {
       minWidth: 150,
       cellRenderer: params => (
         <Link
-          href={`/crag/${params.data.crag_id}`}
+          href={`/crag/${params.data.crag_id}?route=${params.data.route_id}`}
           className="underline"
         >
           {params.value}
@@ -380,7 +380,7 @@ export default function TicksPage() {
 
                   <td className="px-3 py-2">
                     <Link
-                      href={`/crag/${tick.crag_id}`}
+                      href={`/crag/${tick.crag_id}?route=${tick.route_id}`}
                       className="underline"
                     >
                       {tick.route_name}
@@ -389,7 +389,7 @@ export default function TicksPage() {
 
                   <td className="px-3 py-2">
                     <Link
-                      href={`/crag/${tick.crag_id}`}
+                      href={`/crag/${tick.crag_id}?route=${tick.route_id}`}
                       className="underline"
                     >
                       {tick.crag_name}

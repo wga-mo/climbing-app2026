@@ -4,6 +4,7 @@ import { useFilters } from "@/context/FiltersContext";
 import { doesRouteMatchFilters } from "@/utils/doesRouteMatchFilters";
 import SectorDetailsSection from "@/components/SectorDetailsSection";
 import { gradeConversion } from "@/utils/gradeConversion";
+import { useSearchParams } from "next/navigation";
 
 //Pass user into route table in order to enable ticking
 import { useAuth } from "@/context/AuthContext";
@@ -50,6 +51,31 @@ export default function SectorRouteTables({ sectors, routes }) {
 
     loadTicks();
   }, [userId]);
+
+  //scroll to correct position if route is targeted via query param, and highlight it briefly
+  const searchParams = useSearchParams();
+  const routeTarget = searchParams.get("route");
+  const [highlightedRouteId, setHighlightedRouteId] = useState(null);
+
+  useEffect(() => {
+    if (!routeTarget) return;
+
+    const el = document.getElementById(`route-${routeTarget}`);
+    if (!el) return;
+
+    el.scrollIntoView({
+      behavior: "smooth",
+      block: "center",
+    });
+
+    setHighlightedRouteId(Number(routeTarget));
+
+    const timeout = setTimeout(() => {
+      setHighlightedRouteId(null);
+    }, 2500);
+
+    return () => clearTimeout(timeout);
+  }, [routeTarget, sectors, routes, filters]);
 
   const tickCounts = ticks.reduce((acc, tick) => {
     if (!acc[tick.route_id]) {
@@ -214,7 +240,15 @@ export default function SectorRouteTables({ sectors, routes }) {
 
               <tbody>
                 {visibleRoutes.map(route => (
-                  <tr key={route.route_id} className="border-b">
+                  <tr
+                    key={route.route_id}
+                    id={`route-${route.route_id}`}
+                    className={`border-b transition-colors ${
+                      highlightedRouteId === route.route_id
+                        ? "animate-pulse bg-yellow-100"
+                        : ""
+                    }`}
+                  >
                     <td className="py-3 align-top">
                       {route.nr_in_picture}
                     </td>
