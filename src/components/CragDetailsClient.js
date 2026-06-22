@@ -45,6 +45,8 @@ export default function CragDetailsClient({ cragId, sectorId = null }) {
           region,
           area,
           description,
+          driving_directions,
+          approach,
           driving_time,
           walking_time,
           rainproof,

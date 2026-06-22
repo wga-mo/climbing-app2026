@@ -34,6 +34,7 @@ export default function CragDetailsContent({
     : {
         name: crag.crag_name,
         description: crag.description,
+        driving_directions: crag.driving_directions,
         approach: crag.approach,
         walking_time: crag.walking_time,
         orientation: crag.orientation,
@@ -41,6 +42,7 @@ export default function CragDetailsContent({
         type: 'crag'
       };
 
+      console.log('pageinfo: ', pageInfo);
   function getRoutesForSectorIds(routes, sectorIds) {
     const sectorIdSet = new Set(sectorIds);
 

@@ -4,11 +4,11 @@ import { doesRouteMatchFilters } from "@/utils/doesRouteMatchFilters";
 
 const gradeBuckets = [
   { label: "<5", min: 1, max: 9 },
-  { label: "5", min: 10, max: 12 },
-  { label: "6", min: 13, max: 18 },
-  { label: "7", min: 19, max: 23 },
-  { label: "8", min: 24, max: 30 },
-  { label: ">8", min: 31, max: 36 },
+  { label: "5", min: 10, max: 13 },
+  { label: "6", min: 14, max: 19 },
+  { label: "7", min: 20, max: 24 },
+  { label: "8", min: 25, max: 31 },
+  { label: ">8", min: 32, max: 37 },
 ];
 
 export default function GradeHistogram({ routes, filters }) {

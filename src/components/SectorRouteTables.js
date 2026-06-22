@@ -289,11 +289,11 @@ export default function SectorRouteTables({ sectors, routes }) {
           )}
         </td>
 
-        <td className="py-3 align-top text-xs">
+        <td className="py-3 text-xs">
           {starsToText(route.stars_int)}
         </td>
 
-        <td className="py-3 align-top">
+        <td className="py-3">
           {gradeConversion(route.grade_int)}
         </td>
 
@@ -305,7 +305,7 @@ export default function SectorRouteTables({ sectors, routes }) {
           {route.length > 0 ? route.length : ""}
         </td>
 
-        <td className="py-3 align-top">
+        <td className="py-3">
           {user && (
             <button
               onClick={() => setSelectedRoute(route)}

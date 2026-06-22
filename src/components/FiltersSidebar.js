@@ -147,15 +147,15 @@ export default function FiltersSidebar({ filters, setFilters, mobile = false, mo
   <div
     className="absolute top-1/2 h-1 -translate-y-1/2 rounded bg-black"
     style={{
-      left: `${(filters.gradeMin / 36) * 100}%`,
-      width: `${((filters.gradeMax - filters.gradeMin) / 36) * 100}%`,
+      left: `${(filters.gradeMin / 37) * 100}%`,
+      width: `${((filters.gradeMax - filters.gradeMin) / 37) * 100}%`,
     }}
   />
 
   <input
     type="range"
     min="1"
-    max="36"
+    max="37"
     value={filters.gradeMin}
     onChange={handleGradeMinChange}
     className="range-thumb pointer-events-none absolute top-1/2 w-full -translate-y-1/2 appearance-none bg-transparent"
@@ -164,7 +164,7 @@ export default function FiltersSidebar({ filters, setFilters, mobile = false, mo
   <input
     type="range"
     min="1"
-    max="36"
+    max="37"
     value={filters.gradeMax}
     onChange={handleGradeMaxChange}
     className="range-thumb pointer-events-none absolute top-1/2 w-full -translate-y-1/2 appearance-none bg-transparent"

@@ -262,6 +262,18 @@ export default function CragOverview({
           </div>
         )}
 
+        {pageInfo.driving_directions && (
+            <div className="mt-6">
+                <h2 className="text-xl font-semibold">
+                Driving directions
+                </h2>
+
+                <p className="mt-2 whitespace-pre-line">
+                {pageInfo.driving_directions}
+                </p>
+            </div>
+        )}
+                
         {pageInfo.approach && (
             <div className="mt-6">
                 <h2 className="text-xl font-semibold">
