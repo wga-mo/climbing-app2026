@@ -37,7 +37,15 @@ export default function SectorRouteTables({ sectors, routes }) {
 
       const { data, error } = await supabase
         .from("ticks")
-        .select("tick_id, route_id, route_id, tick_type, tick_date, belayer, note, created_at" )
+        .select(`
+          tick_id,
+          route_id,
+          tick_type,
+          tick_date,
+          belayer,
+          note,
+          created_at
+        ` )
         .eq("user_id", userId)
         .order("tick_date", { ascending: false });
 

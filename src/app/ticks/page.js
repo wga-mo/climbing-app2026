@@ -52,7 +52,7 @@ export default function TicksPage() {
       minWidth: 150,
       cellRenderer: params => (
         <Link
-          href={`/crag/${params.data.crag_id}?route=${params.data.route_id}`}
+          href={params.data.href}
           className="underline"
         >
           {params.value}
@@ -109,35 +109,85 @@ export default function TicksPage() {
           routes (
             route_id,
             name,
+            sector_id,
             grade_int,
             crag_id,
             crags (
               crag_name
-            )
+            ),
+            sectors (
+              parent_sector_id)
           )
         `)
         .eq("user_id", user.id)
         .order("tick_date", { ascending: false });
 
+     
       if (error) {
         console.error("Error fetching ticks:", error);
         setLoading(false);
         return;
       }
 
-      const rows = (data || []).map(tick => ({
+      //Find all parentSectorIds (without duplicates)
+      const parentSectorIds = [
+        ...new Set(
+          (data || [])
+            .map((tick) => tick.routes?.sectors?.parent_sector_id)
+            .filter(Boolean)
+        ),
+      ];
+      
+      //Fetch names for parent sectors
+      const { data: parentSectors, error: parentSectorsError } = await supabase
+        .from("sectors")
+        .select("sector_id, name")
+        .in("sector_id", parentSectorIds);
+
+      if (parentSectorsError) {
+        console.error("Error fetching parent sectors:", parentSectorsError);
+      }
+
+      const parentSectorById = Object.fromEntries(
+        (parentSectors || []).map((sector) => [sector.sector_id, sector])
+      );
+
+      const rows = (data || []).map((tick) => {
+      const route = tick.routes;
+      const sector = route?.sectors;
+      const parentSectorId = sector?.parent_sector_id;
+      const parentSector = parentSectorById[parentSectorId];
+
+      return {
         tick_id: tick.tick_id,
         tick_date: tick.tick_date,
         tick_type: tick.tick_type,
         belayer: tick.belayer,
         note: tick.note,
-        route_id: tick.routes?.route_id,
-        route_name: tick.routes?.name || "Unknown route",
-        grade_int: tick.routes?.grade_int,
-        grade: gradeConversion(tick.routes?.grade_int) || "Unknown grade",
-        crag_id: tick.routes?.crag_id,
-        crag_name: tick.routes?.crags?.crag_name || "Unknown crag",
-      }));
+
+        route_id: route?.route_id,
+        route_name: route?.name || "Unknown route",
+        grade_int: route?.grade_int,
+        grade: gradeConversion(route?.grade_int) || "Unknown grade",
+
+        crag_id: route?.crag_id,
+        crag_name: route?.crags?.crag_name || "Unknown crag",
+
+        sector_id: route?.sector_id,
+        parent_sector_id: parentSectorId,
+        parent_sector_name: parentSector?.name,
+
+        crag_href: `/crag/${route?.crag_id}`,
+
+        sector_href: parentSectorId
+          ? `/crag/${route?.crag_id}/sector/${parentSectorId}`
+          : null,
+
+        href: parentSectorId
+          ? `/crag/${route?.crag_id}/sector/${parentSectorId}?route=${route?.route_id}`
+          : `/crag/${route?.crag_id}?route=${route?.route_id}`,
+      };
+    });
 
       setRowData(rows);
       setLoading(false);
@@ -372,28 +422,31 @@ export default function TicksPage() {
                 <th className="px-3 py-2 text-left">Type</th>
               </tr>
             </thead>
-
+            
             <tbody>
               {recentTicks.map(tick => (
                 <tr key={tick.tick_id} className="border-t">
                   <td className="px-3 py-2">{tick.tick_date}</td>
 
                   <td className="px-3 py-2">
-                    <Link
-                      href={`/crag/${tick.crag_id}?route=${tick.route_id}`}
-                      className="underline"
-                    >
+                    <Link href={tick.href} className="underline">
                       {tick.route_name}
                     </Link>
                   </td>
 
                   <td className="px-3 py-2">
-                    <Link
-                      href={`/crag/${tick.crag_id}?route=${tick.route_id}`}
-                      className="underline"
-                    >
-                      {tick.crag_name}
+                    <Link href={tick.crag_href} className="underline">
+                      {tick.crag_name} 
                     </Link>
+
+                    {tick.sector_href && tick.parent_sector_name && (
+                      <>
+                        {" - "}
+                        <Link href={tick.sector_href} className="underline">
+                          {tick.parent_sector_name}
+                        </Link>
+                      </>
+                    )}
                   </td>
 
                   <td className="px-3 py-2">
@@ -426,6 +479,7 @@ export default function TicksPage() {
 
         <div className="ag-theme-quartz mt-4 h-[70vh] w-full">
           <AgGridReact
+            theme="legacy"
             rowData={visibleRows}
             columnDefs={columnDefs}
             defaultColDef={defaultColDef}
