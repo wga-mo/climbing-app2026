@@ -151,7 +151,8 @@ export default function CragDetailsClient({ cragId, sectorId = null }) {
           nr_in_picture,
           sector_id,
           sector,
-          sector_name
+          sector_name,
+          comment
         `)
         .eq("crag_id", cragId)
         .order("nr_in_picture");

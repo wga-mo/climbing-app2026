@@ -197,6 +197,11 @@ export default function SectorRouteTables({ sectors, routes }) {
 
     setTimeout(() => setToast(""), 2500);
   }
+
+  function starsToText(stars) {
+    if (!stars || stars <= 0) return "-";
+    return "★".repeat(stars);
+  }
   
 
   return (
@@ -220,96 +225,110 @@ export default function SectorRouteTables({ sectors, routes }) {
             sector={sector}
           >
             <table className="mt-4 w-full table-fixed border-collapse text-sm">
-              <thead>
-                <tr className="border-b">
-                  <th className="w-8 py-2 text-left">#</th>
+  <thead>
+    <tr className="border-b">
+      <th className="w-8 py-2 text-left">#</th>
 
-                  <th className="py-2 text-left">
-                    Name
-                  </th>
+      <th className="py-2 text-left">Name</th>
 
-                  <th className="w-14 py-2 text-left">
-                    Grade
-                  </th>
+      <th className="w-14 py-2 text-left">Stars</th>
 
-                  <th className="hidden md:table-cell w-20 py-2 text-left">
-                    Style
-                  </th>
+      <th className="w-14 py-2 text-left">Grade</th>
 
-                  <th className="hidden md:table-cell w-16 py-2 text-left">
-                    Length
-                  </th>
+      <th className="hidden w-20 py-2 text-left md:table-cell">
+        Style
+      </th>
 
-                  {user && (
-                    <th className="w-14 py-2 text-left">Tick</th>
-                  )}
-                </tr>
-              </thead>
+      <th className="hidden w-16 py-2 text-left md:table-cell">
+        Length
+      </th>
 
-              <tbody>
-                {visibleRoutes.map(route => (
-                  <tr
-                    key={route.route_id}
-                    id={`route-${route.route_id}`}
-                    className={`border-b transition-colors ${
-                      highlightedRouteId === route.route_id
-                        ? "animate-pulse bg-yellow-100"
-                        : ""
-                    }`}
-                  >
-                    <td className="py-3 align-top">
-                      {route.nr_in_picture}
-                    </td>
+      {user && <th className="w-14 py-2 text-left">Tick</th>}
+    </tr>
+  </thead>
 
-                    <td className="py-3 pr-2">
-                      <div className="break-words font-medium">
-                        {route.name}
-                      </div>
+  <tbody>
+    {visibleRoutes.map((route) => (
+      <tr
+        key={route.route_id}
+        id={`route-${route.route_id}`}
+        className={`border-b transition-colors ${
+          highlightedRouteId === route.route_id
+            ? "animate-pulse bg-yellow-100"
+            : ""
+        }`}
+      >
+        <td className="py-3 align-top">
+          {route.nr_in_picture}
+        </td>
 
-                      {/* Mobile-only secondary info */}
-                      <div className="text-xs text-gray-500 md:hidden">
-                        {route.style}
-                        {route.length > 0 && ` • ${route.length}m`}
-                      </div>
-                    </td>
+        <td className="py-3 pr-2 align-top">
+          <div className="break-words font-medium">
+            {route.name}
+          </div>
 
-                    <td className="py-3 align-top">
-                      {gradeConversion(route.grade_int)}
-                    </td>
+          {/* Mobile-only route metadata */}
+          <div className="mt-1 flex flex-wrap gap-1 text-xs text-gray-600 md:hidden">
+            {route.style && (
+              <span className="rounded bg-gray-100 px-1.5 py-0.5">
+                {route.style}
+              </span>
+            )}
 
-                    <td className="hidden md:table-cell py-3">
-                      {route.style}
-                    </td>
+            {route.length > 0 && (
+              <span className="rounded bg-gray-100 px-1.5 py-0.5">
+                {route.length}m
+              </span>
+            )}
+          </div>
 
-                    <td className="hidden md:table-cell py-3">
-                      {route.length}
-                    </td>
+          {route.comment && (
+            <div className="mt-1 text-xs leading-snug text-gray-500">
+              {route.comment}
+            </div>
+          )}
+        </td>
 
-                    <td className="py-3 align-top">
-                      {user && (
-                        <button
-                          onClick={() => setSelectedRoute(route)}
-                          className="rounded border px-2 py-1 text-xs hover:bg-gray-100"
-                        >
-                          {(() => {
-                            const tickInfo =
-                              tickCounts[route.route_id];
+        <td className="py-3 align-top text-xs">
+          {starsToText(route.stars_int)}
+        </td>
 
-                            if (!tickInfo) return "+";
+        <td className="py-3 align-top">
+          {gradeConversion(route.grade_int)}
+        </td>
 
-                            if (tickInfo.sends > 0) {
-                              return `+ (${tickInfo.sends})`;
-                            }
+        <td className="hidden py-3 md:table-cell">
+          {route.style}
+        </td>
 
-                            return "+ (0)";
-                          })()}
-                        </button>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+        <td className="hidden py-3 md:table-cell">
+          {route.length > 0 ? route.length : ""}
+        </td>
+
+        <td className="py-3 align-top">
+          {user && (
+            <button
+              onClick={() => setSelectedRoute(route)}
+              className="rounded border px-2 py-1 text-xs hover:bg-gray-100"
+            >
+              {(() => {
+                const tickInfo = tickCounts[route.route_id];
+
+                if (!tickInfo) return "+";
+
+                if (tickInfo.sends > 0) {
+                  return `+ (${tickInfo.sends})`;
+                }
+
+                return "+ (0)";
+              })()}
+            </button>
+          )}
+        </td>
+      </tr>
+    ))}
+  </tbody>
+</table>
           </SectorDetailsSection>
         );
       })}
