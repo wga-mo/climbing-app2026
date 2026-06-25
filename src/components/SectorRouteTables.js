@@ -12,7 +12,8 @@ import { supabase } from "@/lib/supabase";
 import { useEffect, useState } from "react";
 import TickModal from "@/components/TickModal";
 
-export default function SectorRouteTables({ sectors, routes }) {
+// Used in CragDetailsContent
+export default function SectorRouteTables({ sectors, routes, sectorId = null }) {
   const { filters } = useFilters();
   
   //Ticks
@@ -223,6 +224,7 @@ export default function SectorRouteTables({ sectors, routes }) {
           <SectorDetailsSection
             key={sector.sector_id}
             sector={sector}
+            sectorId={sectorId}
           >
             <table className="mt-4 w-full table-fixed border-collapse text-sm">
   <thead>

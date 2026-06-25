@@ -1,9 +1,11 @@
 import SectorTopo from "@/components/SectorTopo";
 import { useAuth } from "@/context/AuthContext";
 
+// Called from SectorRouteTables
 export default function SectorDetailsSection({
   sector,
   children,
+  sectorId = null,
 }) {
 
     function getSteepnessIcon(type) {
@@ -104,7 +106,7 @@ export default function SectorDetailsSection({
                             Topo
                         </h3>
 
-                        <SectorTopo sector={sector} />
+                        <SectorTopo sector={sector} sectorId={sectorId} />
                     </div>
                 )}
             </div>

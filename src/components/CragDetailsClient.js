@@ -6,6 +6,9 @@ import CragDetailsContent from "@/components/CragDetailsContent";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/context/AuthContext";
 
+// Used in 
+// - crag/page.js
+// - crag/xxx/sector/page.js
 export default function CragDetailsClient({ cragId, sectorId = null }) {
   const [crag, setCrag] = useState(null);
   const [sectors, setSectors] = useState([]);

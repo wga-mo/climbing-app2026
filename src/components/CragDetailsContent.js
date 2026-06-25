@@ -6,6 +6,7 @@ import Link from "next/link";
 import CragOverview from "@/components/CragOverview";
 import GradeHistogram from "@/components/GradeHistogram";
 
+//Used in CragDetailsClient
 export default function CragDetailsContent({ 
   crag, 
   currentSector,
@@ -175,6 +176,7 @@ export default function CragDetailsContent({
         <SectorRouteTables
           sectors={sectors}
           routes={routes}
+          sectorId={sectorId}
         />
       )}
 

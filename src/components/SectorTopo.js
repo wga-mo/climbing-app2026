@@ -3,13 +3,23 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 
-export default function SectorTopo({ sector }) {
+export default function SectorTopo({ sector, sectorId = null }) {
   const [open, setOpen] = useState(false);
   const [imageUrl, setImageUrl] = useState(null);
   const [errorMessage, setErrorMessage] = useState("");
 
   const hasTopo = !!sector.sector_in_crag && !!sector.topo_extension;
 
+  const isSectorPage = !!sectorId;
+  
+  const path = isSectorPage
+    ? `crags/${sectorId}/sector-${sector.sector_in_crag}.${sector.topo_extension}`
+        
+    : `crags/${sector.crag_id}/sector-${sector.sector_in_crag}.${sector.topo_extension}`;
+      
+     
+      console.log(path); 
+  
   useEffect(() => {
     if (!hasTopo) return;
 
@@ -19,9 +29,6 @@ export default function SectorTopo({ sector }) {
     try {
       setImageUrl(null);
       setErrorMessage("");
-
-      const path =
-        `crags/${sector.crag_id}/sector-${sector.sector_in_crag}.${sector.topo_extension}`;
 
       const { data, error } =
         await supabase.storage
