@@ -1,5 +1,6 @@
 import SectorTopo from "@/components/SectorTopo";
 import { useAuth } from "@/context/AuthContext";
+import CollapsibleText from "./CollapsableText";
 
 // Called from SectorRouteTables
 export default function SectorDetailsSection({
@@ -88,11 +89,12 @@ export default function SectorDetailsSection({
                         
                     </div>
 
-                    {sector.description && (
-                        <p className="mt-2 text-gray-600">
-                        {sector.description}
-                        </p>
-                    )}
+                    <CollapsibleText
+                    title="Description"
+                    text={sector.description}
+                    />
+
+  
 
                     <div className="mt-4">
                         {children}

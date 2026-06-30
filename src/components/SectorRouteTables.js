@@ -12,6 +12,8 @@ import { supabase } from "@/lib/supabase";
 import { useEffect, useState } from "react";
 import TickModal from "@/components/TickModal";
 
+import CollapsibleText from "./CollapsableText";
+
 // Used in CragDetailsContent
 export default function SectorRouteTables({ sectors, routes, sectorId = null }) {
   const { filters } = useFilters();
@@ -284,11 +286,14 @@ export default function SectorRouteTables({ sectors, routes, sectorId = null }) 
             )}
           </div>
 
-          {route.comment && (
-            <div className="mt-1 text-xs leading-snug text-gray-500">
-              {route.comment}
-            </div>
-          )}
+          <CollapsibleText
+            title=""
+            text={route.comment}
+            className="mt-1 text-xs leading-snug text-gray-500"
+            lines={1}
+            buttonClassName="mt-1 text-xs text-gray-500 hover:text-gray-700"
+          />
+          
         </td>
 
         <td className="py-3 text-xs">

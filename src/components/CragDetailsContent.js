@@ -43,7 +43,7 @@ export default function CragDetailsContent({
         type: 'crag'
       };
 
-      console.log('pageinfo: ', pageInfo);
+  
   function getRoutesForSectorIds(routes, sectorIds) {
     const sectorIdSet = new Set(sectorIds);
 

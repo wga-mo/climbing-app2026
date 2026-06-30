@@ -3,6 +3,7 @@ import { useRef, useEffect, useState, useMemo } from "react";
 import { supabase } from "@/lib/supabase";
 import GuidebooksList from "@/components/GuidebooksList";
 import GradeHistogram from "@/components/GradeHistogram";
+import CollapsibleText from "./CollapsableText";
 
   const MapView = dynamic(
     () => import("@/components/MapView"),
@@ -250,41 +251,20 @@ export default function CragOverview({
           </div>
         )}
 
-        {pageInfo.description && (
-          <div className="mt-6">
-              <h2 className="text-xl font-semibold">
-              Description
-              </h2>
+        <CollapsibleText
+          title="Description"
+          text={pageInfo.description}
+        />
 
-              <p className="mt-2 whitespace-pre-line">
-              {pageInfo.description}
-              </p>
-          </div>
-        )}
+        <CollapsibleText
+          title="Driving directions"
+          text={pageInfo.driving_directions}
+        />
 
-        {pageInfo.driving_directions && (
-            <div className="mt-6">
-                <h2 className="text-xl font-semibold">
-                Driving directions
-                </h2>
-
-                <p className="mt-2 whitespace-pre-line">
-                {pageInfo.driving_directions}
-                </p>
-            </div>
-        )}
-                
-        {pageInfo.approach && (
-            <div className="mt-6">
-                <h2 className="text-xl font-semibold">
-                Approach
-                </h2>
-
-                <p className="mt-2 whitespace-pre-line">
-                {pageInfo.approach}
-                </p>
-            </div>
-        )}
+        <CollapsibleText
+          title="Approach"
+          text={pageInfo.approach}
+        />
 
         {pageInfo.type === 'crag' && (
           <GuidebooksList guidebooks={guidebooks} />
