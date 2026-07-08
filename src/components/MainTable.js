@@ -1,23 +1,75 @@
 'use client';
 
 import { useRouter } from "next/navigation";
+import { useFilters } from "@/context/FiltersContext";
 
 export default function MainTable({ crags, loading, activeCragId, setActiveCragId }) {
   const router = useRouter();
-  //console.log('test',crags);
+
+  const { filters, setFilters } = useFilters();
+
+  const { sortColumn, sortDirection } = filters;
+
   if (loading) return <p>Loading crags...</p>;
-  
   
   if (!crags.length) return <p>No crags found.</p>;
 
-  console.log(crags);
+  function handleSort(column) {
+    setFilters((prev) => {
+      if (prev.sortColumn === column) {
+        return {
+          ...prev,
+          sortDirection: prev.sortDirection === "asc" ? "desc" : "asc",
+        };
+      }
+
+      return {
+        ...prev,
+        sortColumn: column,
+        sortDirection: "desc",
+      };
+    });
+  }
+
+  const sortedCrags = [...crags].sort((a, b) => {
+    const aValue = a[sortColumn] ?? 0;
+    const bValue = b[sortColumn] ?? 0;
+
+    if (typeof aValue === "string") {
+      return sortDirection === "asc"
+        ? aValue.localeCompare(bValue)
+        : bValue.localeCompare(aValue);
+    }
+
+    return sortDirection === "asc"
+      ? aValue - bValue
+      : bValue - aValue;
+  });
+
+
   return (
     <div className="w-full">
       <table className="w-full table-fixed border-collapse text-sm text-center">
         <thead className="bg-gray-100 border-gray-500">
           <tr>
-            <th className="w-[30%] px-2 py-2 text-left font-semibold">Crag name</th>
-            <th className="px-1 py-2 font-semibold">∑</th>
+            <th className="w-[30%] px-2 py-2 text-left font-semibold">
+              <button 
+                type="button"
+                onClick={() => handleSort("crag_name")}
+                className="block w-full text-left cursor-pointer hover:underline"
+              >
+                Crag name {sortColumn === "crag_name" && (sortDirection === "asc" ? "↑" : "↓")}
+              </button>
+            </th>
+            <th className="px-1 py-2 font-semibold">
+              <button 
+                type="button"
+                onClick={() => handleSort("total_routes")}
+                className="block w-full cursor-pointer hover:underline"
+              >
+                ∑ {sortColumn === "total_routes" && (sortDirection === "asc" ? "↑" : "↓")}
+              </button>
+            </th>
             <th className="px-3 py-2">&lt;5</th>
             <th className="px-3 py-2">5</th>
             <th className="px-3 py-2">6</th>
@@ -28,7 +80,7 @@ export default function MainTable({ crags, loading, activeCragId, setActiveCragI
         </thead>
 
         <tbody>
-          {crags.map(crag => (
+          {sortedCrags.map(crag => (
             <tr
               key={crag.crag_id}
               onClick={() => router.push(`/crag/${crag.crag_id}`)}

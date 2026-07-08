@@ -18,6 +18,8 @@ export const defaultFilters = {
   d_time: 120,
   w_time: 45,
   selectedRegions: ["Oslo"],
+  sortColumn: "total_routes",
+  sortDirection: "desc",
 };
 
 export function FiltersProvider({ children }) {
