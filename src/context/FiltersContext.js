@@ -17,8 +17,7 @@ export const defaultFilters = {
   p_m: false,
   d_time: 120,
   w_time: 45,
-  oslo: true,
-  bergen: false,
+  selectedRegions: ["Oslo"],
 };
 
 export function FiltersProvider({ children }) {
