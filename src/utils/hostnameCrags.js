@@ -17,7 +17,7 @@ export function hostnameCrags() {
         //Drammen
         "klatring2026.vercel.app": {
         cragMin: 154,
-        cragMax: 9999,
+        cragMax: 186,
         },
     };
 
