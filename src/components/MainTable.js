@@ -10,6 +10,7 @@ export default function MainTable({ crags, loading, activeCragId, setActiveCragI
   
   if (!crags.length) return <p>No crags found.</p>;
 
+  console.log(crags);
   return (
     <div className="w-full">
       <table className="w-full table-fixed border-collapse text-sm text-center">

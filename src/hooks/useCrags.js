@@ -18,6 +18,9 @@ export function useCrags(filters) {
 
       const { cragMin, cragMax } = hostnameCrags();
 
+      console.log(cragMin, cragMax);
+      console.log("Filters:", filters);
+
       const { data, error } = await supabase.rpc("crag_grade_summary", {
         grade_1_min: 1,
         grade_1_max: 9,
@@ -45,8 +48,7 @@ export function useCrags(filters) {
         d_time: filters.globalFilter ? filters.d_time : 1000,
         w_time: filters.globalFilter ? filters.w_time : 1000,
 
-        oslo: filters.oslo,
-        bergen: filters.bergen,
+        regions: filters.selectedRegions ?? null,
       });
 
       if (error) {
@@ -56,6 +58,7 @@ export function useCrags(filters) {
         return;
       }
 
+      console.log("Fetched crag grade summary:", data);
       const filteredData = (data || []).filter(
         crag =>
           crag.crag_id >= cragMin &&

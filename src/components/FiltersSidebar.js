@@ -4,6 +4,24 @@ import { useAuth } from "@/context/AuthContext";
 
 export default function FiltersSidebar({ filters, setFilters, mobile = false, mode="main" }) {
 
+  const regionOptions = [
+    { label: "Oslo", value: "Oslo" },
+    { label: "Vestland", value: "Vestland" },
+  ];
+
+  function handleRegionChange(regionValue) {
+    setFilters(prev => {
+      const selectedRegions = prev.selectedRegions || [];
+
+      return {
+        ...prev,
+        selectedRegions: selectedRegions.includes(regionValue)
+          ? selectedRegions.filter(region => region !== regionValue)
+          : [...selectedRegions, regionValue],
+      };
+    });
+  }
+
   const filtersDisabled = !filters.globalFilter;
   const { setMobileFiltersVisible } = useFilters();
   const isDetailsMode = mode === "details";
@@ -266,25 +284,16 @@ export default function FiltersSidebar({ filters, setFilters, mobile = false, mo
       <section className={`mt-3 border-b pb-4 ${travelFiltersDisabled ? "pointer-events-none opacity-40" : ""}`}>
         <h3 className="text-xl font-semibold">Area</h3>
 
-        <label className="mt-2 flex items-center gap-1 text-sm">
-          <input
-            type="checkbox"
-            name="oslo"
-            checked={filters.oslo}
-            onChange={handleCheckboxChange}
-          />
-          Oslo
-        </label>
-
-        <label className="flex items-center gap-1 text-sm">
-          <input
-            type="checkbox"
-            name="bergen"
-            checked={filters.bergen}
-            onChange={handleCheckboxChange}
-          />
-          Bergen
-        </label>
+        {regionOptions.map(region => (
+          <label key={region.value} className="flex items-center gap-1 text-sm">
+            <input
+              type="checkbox"
+              checked={filters.selectedRegions?.includes(region.value) ?? false}
+              onChange={() => handleRegionChange(region.value)}
+            />
+            {region.label}
+          </label>
+        ))}
       </section>
       </>
       )}
