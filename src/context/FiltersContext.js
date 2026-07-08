@@ -7,12 +7,12 @@ const FiltersContext = createContext(null);
 const FILTER_STORAGE_KEY = "climbing_filters_v1";
 
 export const defaultFilters = {
-  globalFilter: true,
+  globalFilter: false,
   sport: true,
   trad: false,
   boulder: false,
   gradeMin: 10,
-  gradeMax: 19,
+  gradeMax: 24,
   p_s: true,
   p_m: false,
   d_time: 120,
