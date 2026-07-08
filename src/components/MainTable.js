@@ -31,6 +31,20 @@ export default function MainTable({ crags, loading, activeCragId, setActiveCragI
     });
   }
 
+  function SortArrow({ column }) {
+    const active = sortColumn === column;
+
+    return (
+      <span className={active ? "ml-1" : "ml-1 text-gray-300"}>
+        {active
+          ? sortDirection === "asc"
+            ? "↑"
+            : "↓"
+          : "↕"}
+      </span>
+    );
+  }
+
   const sortedCrags = [...crags].sort((a, b) => {
     const aValue = a[sortColumn] ?? 0;
     const bValue = b[sortColumn] ?? 0;
@@ -58,7 +72,7 @@ export default function MainTable({ crags, loading, activeCragId, setActiveCragI
                 onClick={() => handleSort("crag_name")}
                 className="block w-full text-left cursor-pointer hover:underline"
               >
-                Crag name {sortColumn === "crag_name" && (sortDirection === "asc" ? "↑" : "↓")}
+                Crag name <SortArrow column="crag_name" />
               </button>
             </th>
             <th className="px-1 py-2 font-semibold">
@@ -67,7 +81,7 @@ export default function MainTable({ crags, loading, activeCragId, setActiveCragI
                 onClick={() => handleSort("total_routes")}
                 className="block w-full cursor-pointer hover:underline"
               >
-                ∑ {sortColumn === "total_routes" && (sortDirection === "asc" ? "↑" : "↓")}
+                ∑ <SortArrow column="total_routes" />
               </button>
             </th>
             <th className="px-3 py-2">&lt;5</th>
