@@ -20,6 +20,7 @@ export const defaultFilters = {
   selectedRegions: ["Oslo"],
   sortColumn: "total_routes",
   sortDirection: "desc",
+  searchText: "",
 };
 
 export function FiltersProvider({ children }) {
