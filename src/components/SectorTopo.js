@@ -14,11 +14,7 @@ export default function SectorTopo({ sector, sectorId = null }) {
   
   const path = isSectorPage
     ? `crags/${sectorId}/sector-${sector.sector_in_crag}.${sector.topo_extension}`
-        
     : `crags/${sector.crag_id}/sector-${sector.sector_in_crag}.${sector.topo_extension}`;
-      
-     
-      console.log(path); 
   
   useEffect(() => {
     if (!hasTopo) return;

@@ -21,11 +21,14 @@ export default function CragOverview({
   allSectors,
   guidebooks,
   locations,
+  paths,
   routes,
   filters,
   sectorId,
   children, 
 }) {
+
+  console.log("Paths in CragOverview:", paths);
 
   const router = useRouter();
   const pathname = usePathname();
@@ -332,6 +335,7 @@ export default function CragOverview({
             <div className="relative h-full w-full">
               <MapView
                 markers={detailMarkers}
+                paths={paths ?? []}
                 mode="detail"
               />
 

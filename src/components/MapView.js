@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import L from "leaflet";
-import { MapContainer, TileLayer, Marker, Popup, Tooltip, useMap, ZoomControl } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Popup, Tooltip, useMap, ZoomControl, Polyline } from "react-leaflet";
 import { useRouter } from "next/navigation";
 
 function getParkingLabel(type) {
@@ -54,21 +54,24 @@ function getMarkerIcon(marker) {
   });
 }
 
-function FitMapToMarkers({ markers }) {
+function FitMapToContent({ markers, paths }) {
   const map = useMap();
 
   useEffect(() => {
-    if (!markers.length) return;
+    const positions = [
+      ...markers.map(marker => [marker.lat, marker.lng]),
+      ...paths.flatMap(path => path.positions),
+    ];
 
-    const bounds = L.latLngBounds(
-      markers.map(marker => [marker.lat, marker.lng])
-    );
+    if (!positions.length) return;
+
+    const bounds = L.latLngBounds(positions);
 
     map.fitBounds(bounds, {
       padding: [40, 40],
       maxZoom: 15,
     });
-  }, [markers, map]);
+  }, [markers, paths, map]);
 
   return null;
 }
@@ -177,11 +180,13 @@ function LocateControl({
 
 export default function MapView({
   markers,
+  paths = [],
   activeMarkerId,
   setActiveMarkerId,
   mode = "main",
 }) {
-  
+  console.log("Paths in MapView:", paths);
+
   const router = useRouter();
   const markerRefs = useRef({});
   const locateControlRef = useRef(null);
@@ -197,6 +202,48 @@ export default function MapView({
     () => markers.filter(marker => marker.lat && marker.lng),
     [markers]
   );
+
+  const visiblePaths = useMemo(() => {
+    return paths
+      .map(path => {
+        const geojson = path.geometry;
+
+        const line =
+          geojson?.type === "Feature"
+            ? geojson.geometry
+            : geojson;
+
+        if (
+          line?.type !== "LineString" ||
+          !Array.isArray(line.coordinates)
+        ) {
+          return null;
+        }
+
+        const positions = line.coordinates
+          .filter(
+            coordinate =>
+              Array.isArray(coordinate) &&
+              coordinate.length >= 2 &&
+              Number.isFinite(Number(coordinate[0])) &&
+              Number.isFinite(Number(coordinate[1]))
+          )
+          .map(([lng, lat]) => [
+            Number(lat),
+            Number(lng),
+          ]);
+
+        if (positions.length < 2) {
+          return null;
+        }
+
+        return {
+          ...path,
+          positions,
+        };
+      })
+      .filter(Boolean);
+  }, [paths]);
 
   useEffect(() => {
     if (!activeMarkerId) return;
@@ -293,13 +340,31 @@ export default function MapView({
       >
         <ResizeMap />
 
-        {shouldFitMarkers && (  <FitMapToMarkers markers={visibleMarkers} /> )}
+        {shouldFitMarkers && (  <FitMapToContent markers={visibleMarkers} paths={visiblePaths} /> )}
 
         <TileLayer
           attribution='&copy; OpenStreetMap contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
 
+        {visiblePaths.map(path => (
+          <Polyline
+            key={path.path_id}
+            positions={path.positions}
+            pathOptions={{
+              color: "#2563eb",
+              weight: 5,
+              opacity: 0.9,
+              lineCap: "round",
+              lineJoin: "round",
+            }}
+          >
+            <Tooltip sticky>
+              {path.name || "Approach"}
+            </Tooltip>
+          </Polyline>
+        ))}
+        
         <ZoomControl position="bottomright" />
 
         <LocateControl

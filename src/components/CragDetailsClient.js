@@ -15,12 +15,12 @@ export default function CragDetailsClient({ cragId, sectorId = null }) {
   const [allSectors, setAllSectors] = useState([]);
   const [routes, setRoutes] = useState([]);
   const [guidebooks, setGuidebooks] = useState([]);
+  const [locations, setLocations] = useState([]);
+  const [paths, setPaths] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const [currentSector, setCurrentSector] = useState(null);
   const [showSectorCards, setShowSectorCards] = useState(false);
-
-  const [locations, setLocations] = useState([]);
 
   const { user, loading: authLoading } = useAuth();
   // console.log('user', user);
@@ -37,6 +37,7 @@ export default function CragDetailsClient({ cragId, sectorId = null }) {
       const sectorSource = userId ? "sectors" : "public_sector_preview";
       const routeSource = userId ? "routes" : "public_route_preview";
       const locationSource = userId ? "locations" : "public_location_preview";
+      const pathsSource = "map_paths";
 
       // Fetch crag data
       const { data: cragData, error: cragError } = await supabase
@@ -110,6 +111,22 @@ export default function CragDetailsClient({ cragId, sectorId = null }) {
         return;
       }
 
+      // Fetch map paths data
+      const { data: pathsData, error: pathsError } = await supabase
+        .from(pathsSource)
+        .select("path_id, name, path_type, geometry")
+        .eq("crag_id", cragId)
+        .eq("path_type", "approach");
+
+      if (pathsError || !pathsData) {
+        console.error("Error fetching map paths:", pathsError);
+        setPaths([]);
+        setLoading(false);
+        return;
+      }
+
+      console.log("Fetched paths in CragDetailsClient:", pathsData);
+
       let displayedSectors = [];
       let pageSector = null;
       let shouldShowSectorCards = false;
@@ -134,8 +151,8 @@ export default function CragDetailsClient({ cragId, sectorId = null }) {
         );
       }
 
-      console.log("Page sector:", pageSector);
-      console.log("Displayed sectors:", displayedSectors);
+      //console.log("Page sector:", pageSector);
+      //console.log("Displayed sectors:", displayedSectors);
 
       setCurrentSector(pageSector || null);
       setSectors(displayedSectors);
@@ -187,6 +204,7 @@ export default function CragDetailsClient({ cragId, sectorId = null }) {
       setAllSectors(sectorData || []);
       setRoutes(routeData || []);
       setGuidebooks(guidebookData || []);
+      setPaths(pathsData || []);
       setLoading(false);
     }
 
@@ -219,6 +237,7 @@ export default function CragDetailsClient({ cragId, sectorId = null }) {
         routes={routes}
         guidebooks={guidebooks}
         locations={locations}
+        paths={paths}
         sectorId={sectorId}
         showSectorCards={showSectorCards}
       />

@@ -14,6 +14,7 @@ export default function CragMapClient({
   const [crag, setCrag] = useState(null);
   const [locations, setLocations] = useState([]);
   const [sectors, setSectors] = useState([]);
+  const [paths, setPaths] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -39,10 +40,13 @@ export default function CragMapClient({
         ? "locations"
         : "public_location_preview";
 
+      const pathsSource = "map_paths";
+
       const [
         { data: cragData, error: cragError },
         { data: locationData, error: locationError },
         { data: sectorData, error: sectorError },
+        { data: pathsData, error: pathsError },
       ] = await Promise.all([
         supabase
           .from(cragSource)
@@ -64,6 +68,12 @@ export default function CragMapClient({
           )
           .eq("crag_id", cragId)
           .order("sector_in_crag"),
+          
+        supabase
+          .from(pathsSource)
+          .select("path_id, name, path_type, geometry")
+          .eq("crag_id", cragId)
+          .eq("path_type", "approach"),
       ]);
 
       if (cragError) {
@@ -88,15 +98,24 @@ export default function CragMapClient({
         );
       }
 
+      if (pathsError) {
+        console.error("Error fetching map paths:", pathsError);
+      }
+
       setCrag(cragData);
       setLocations(locationData || []);
       setSectors(sectorData || []);
+      setPaths(pathsData || []);
       setLoading(false);
     }
 
     fetchMapData();
+    
+
   }, [cragId, userId, authLoading]);
 
+  console.log("Paths fetched:", paths);
+  
   const markers = useMemo(() => {
     if (!crag) return [];
 
@@ -146,6 +165,7 @@ export default function CragMapClient({
     <main className="relative flex min-h-0 flex-1">
       <MapView
         markers={markers}
+        paths={paths ?? []}
         mode="fullscreen"
       />
 
