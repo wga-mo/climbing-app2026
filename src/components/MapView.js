@@ -45,7 +45,13 @@ function getMarkerIcon(marker) {
     });
   }
 
-  return defaultIcon;
+  return L.divIcon({
+    className: "custom-marker crag-marker",
+    html: "<span>•</span>",
+    iconSize: [28, 28],
+    iconAnchor: [14, 28],
+    popupAnchor: [0, -28],
+  });
 }
 
 function FitMapToMarkers({ markers }) {
@@ -71,10 +77,13 @@ export default function MapView({
   markers,
   activeMarkerId,
   setActiveMarkerId,
-  detailView=false,
+  mode = "main",
 }) {
   const router = useRouter();
   const markerRefs = useRef({});
+
+  const isMainMap = mode === "main";
+  const shouldFitMarkers = mode ==="detail" || mode === "fullscreen";
 
   const visibleMarkers = useMemo(
     () => markers.filter(marker => marker.lat && marker.lng),
@@ -110,9 +119,9 @@ export default function MapView({
   return (
     <div
       className={
-        detailView
-          ? "h-full w-full overflow-hidden rounded"
-          : "h-[calc(100vh-6rem)] w-full overflow-hidden rounded border"
+        isMainMap
+        ? "h-[calc(100vh-6rem)] w-full overflow-hidden rounded border"
+        : "h-full w-full overflow-hidden rounded"
       }
     >
       <MapContainer
@@ -123,7 +132,7 @@ export default function MapView({
       >
         <ResizeMap />
 
-        {detailView && (  <FitMapToMarkers markers={visibleMarkers} /> )}
+        {shouldFitMarkers && (  <FitMapToMarkers markers={visibleMarkers} /> )}
 
         <TileLayer
           attribution='&copy; OpenStreetMap contributors'
@@ -136,7 +145,11 @@ export default function MapView({
             position={[marker.lat, marker.lng]}
             icon={getMarkerIcon(marker)}
             ref={ref => {
-              if (ref) markerRefs.current[marker.id] = ref;
+              if (ref) {
+                markerRefs.current[marker.id] = ref;
+              } else {
+                delete markerRefs.current[marker.id];
+              }
             }}
             eventHandlers={{
               click: () => {
@@ -154,7 +167,7 @@ export default function MapView({
               },
             }}
           >
-            {marker.type === "sector"  && (
+            {marker.type === "sector"  ? (
               <Tooltip
                 permanent
                 direction="top"
@@ -163,7 +176,7 @@ export default function MapView({
               >
                 {marker.label}
               </Tooltip>
-            ) || (
+            ) : (
               <Popup>
                 {marker.label}
               </Popup>

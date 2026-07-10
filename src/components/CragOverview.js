@@ -290,7 +290,7 @@ export default function CragOverview({
           {rightPanelView === "map" ? (
             <MapView
               markers={detailMarkers}
-              detailView
+              mode = "detail"
             />
           ) : (
             <img

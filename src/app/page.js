@@ -51,6 +51,7 @@ export default function HomePage() {
           markers={markers}
           activeMarkerId={activeCragId}
           setActiveMarkerId={setActiveCragId}
+          mode = "main"
         />
       </section>
     </main>
@@ -72,6 +73,7 @@ export default function HomePage() {
             markers={markers}
             activeMarkerId={activeCragId}
             setActiveMarkerId={setActiveCragId}
+            mode = "main"
           />
         </section>
       )}
