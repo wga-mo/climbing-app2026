@@ -127,3 +127,28 @@ body {
 .sector-label::before {
   display: none;
 }
+
+/* Styling for user location markers (map markers) */
+.user-location-marker {
+  background: transparent;
+  border: none;
+}
+
+.user-location-dot {
+  display: flex;
+  width: 24px;
+  height: 24px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  background: rgba(59, 130, 246, 0.2);
+}
+
+.user-location-dot-inner {
+  width: 14px;
+  height: 14px;
+  border: 3px solid white;
+  border-radius: 9999px;
+  background: #2563eb;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+}

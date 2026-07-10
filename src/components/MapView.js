@@ -2,8 +2,9 @@
 
 import { useEffect, useMemo, useRef } from "react";
 import L from "leaflet";
-import { MapContainer, TileLayer, Marker, Popup, Tooltip, useMap, ZoomControl } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Popup, Tooltip, useMap, ZoomControl, Circle } from "react-leaflet";
 import { useRouter } from "next/navigation";
+import { useUserLocation } from "@/hooks/useUserLocation";
 
 function getParkingLabel(type) {
   if (type === "parking") return "P";
@@ -54,6 +55,19 @@ function getMarkerIcon(marker) {
   });
 }
 
+function getUserLocationIcon() {
+  return L.divIcon({
+    className: "user-location-marker",
+    html: `
+      <div class="user-location-dot">
+        <div class="user-location-dot-inner"></div>
+      </div>
+    `,
+    iconSize: [24, 24],
+    iconAnchor: [12, 12],
+  });
+}
+
 function FitMapToMarkers({ markers }) {
   const map = useMap();
 
@@ -79,6 +93,7 @@ export default function MapView({
   setActiveMarkerId,
   mode = "main",
 }) {
+  
   const router = useRouter();
   const markerRefs = useRef({});
 
@@ -118,16 +133,38 @@ export default function MapView({
     return null;
   }
 
+  const {
+    location: userLocation,
+    loading: userLocationLoading,
+    error: userLocationError,
+  } = useUserLocation({
+    enabled: isFullscreenMap,
+    watch: true,
+  });
+
   return (
     <div
       className={
         isFullscreenMap
-        ? "h-full w-full overflow-hidden"
+        ? "relative h-full w-full overflow-hidden"
         :  isMainMap
           ? "h-[calc(100vh-6rem)] w-full overflow-hidden rounded border"
           : "h-full w-full overflow-hidden rounded"
       }
     >
+
+      {isFullscreenMap && userLocationLoading && (
+        <div className="absolute bottom-3 left-3 z-[1000] rounded-md border bg-white px-3 py-2 text-sm shadow">
+          Finding your location...
+        </div>
+      )}
+
+      {isFullscreenMap && userLocationError && (
+        <div className="absolute bottom-3 left-3 z-[1000] max-w-[calc(100%-5rem)] rounded-md border bg-white px-3 py-2 text-sm shadow">
+          {userLocationError}
+        </div>
+      )}
+
       <MapContainer
         center={[59.9139, 10.7522]}
         zoom={8}
@@ -191,6 +228,38 @@ export default function MapView({
             )}
           </Marker>
         ))}
+
+        {userLocation && (
+          <>
+            <Marker
+              position={[userLocation.lat, userLocation.lng]}
+              icon={getUserLocationIcon()}
+              zIndexOffset={1000}
+            >
+              <Popup>
+                <div>
+                  <div className="font-medium">Your location</div>
+
+                  {userLocation.accuracy && (
+                    <div className="mt-1 text-xs text-gray-500">
+                      Accuracy: approximately{" "}
+                      {Math.round(userLocation.accuracy)} m
+                    </div>
+                  )}
+                </div>
+              </Popup>
+            </Marker>
+
+            <Circle
+              center={[userLocation.lat, userLocation.lng]}
+              radius={userLocation.accuracy}
+              pathOptions={{
+                weight: 1,
+                fillOpacity: 0.08,
+              }}
+            />
+          </>
+        )}
           </MapContainer>
     </div>
   );
