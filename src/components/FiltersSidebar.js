@@ -282,7 +282,7 @@ export default function FiltersSidebar({ filters, setFilters, mobile = false, mo
         <>
       {/* Region filter */}
       <section className={`mt-3 border-b pb-4 ${travelFiltersDisabled ? "pointer-events-none opacity-40" : ""}`}>
-        <h3 className="text-xl font-semibold">Area</h3>
+        <h3 className="text-xl font-semibold">Region</h3>
 
         {regionOptions.map(region => (
           <label key={region.value} className="flex items-center gap-1 text-sm">
