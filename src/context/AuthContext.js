@@ -50,7 +50,7 @@ export function AuthProvider({ children }) {
   setTimeout(async () => {
     const { data: profileData } = await supabase
       .from("profiles")
-      .select("username")
+      .select("username, is_admin")
       .eq("id", currentUser.id)
       .single();
 
@@ -60,7 +60,8 @@ export function AuthProvider({ children }) {
 
 return () => subscription.unsubscribe();
   }, []);
-
+  console.log("AuthContext state:", { user, profile, loading });
+  
   return (
     <AuthContext.Provider
       value={{

@@ -115,8 +115,7 @@ export default function CragDetailsClient({ cragId, sectorId = null }) {
       const { data: pathsData, error: pathsError } = await supabase
         .from(pathsSource)
         .select("path_id, name, path_type, geometry")
-        .eq("crag_id", cragId)
-        .eq("path_type", "approach");
+        .eq("crag_id", cragId);
 
       if (pathsError || !pathsData) {
         console.error("Error fetching map paths:", pathsError);
@@ -126,6 +125,7 @@ export default function CragDetailsClient({ cragId, sectorId = null }) {
       }
 
       console.log("Fetched paths in CragDetailsClient:", pathsData);
+      console.log("Fetched paths in CragDetailsClient - Error:", pathsError);
 
       let displayedSectors = [];
       let pageSector = null;

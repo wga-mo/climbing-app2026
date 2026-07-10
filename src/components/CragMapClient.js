@@ -18,8 +18,9 @@ export default function CragMapClient({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading, profile } = useAuth();
   const userId = user?.id ?? null;
+  const isAdmin = profile?.is_admin ?? false;
 
   useEffect(() => {
     if (authLoading) return;
@@ -72,8 +73,7 @@ export default function CragMapClient({
         supabase
           .from(pathsSource)
           .select("path_id, name, path_type, geometry")
-          .eq("crag_id", cragId)
-          .eq("path_type", "approach"),
+          .eq("crag_id", cragId),
       ]);
 
       if (cragError) {
@@ -115,7 +115,7 @@ export default function CragMapClient({
   }, [cragId, userId, authLoading]);
 
   console.log("Paths fetched:", paths);
-  
+
   const markers = useMemo(() => {
     if (!crag) return [];
 
@@ -161,12 +161,48 @@ export default function CragMapClient({
     );
   }
 
+  async function handleSavePath({ name, points }) {
+    const geometry = {
+        type: "Feature",
+        properties: {},
+        geometry: {
+        type: "LineString",
+        coordinates: points.map(([lat, lng]) => [
+            lng,
+            lat,
+        ]),
+        },
+    };
+
+    const { data, error } = await supabase
+        .from("map_paths")
+        .insert({
+        crag_id: cragId,
+        name,
+        path_type: "path",
+        geometry,
+        })
+        .select()
+        .single();
+
+    if (error) {
+        throw error;
+    }
+
+    setPaths(current => [
+        ...current,
+        data,
+    ]);
+  }
+
   return (
     <main className="relative flex min-h-0 flex-1">
       <MapView
         markers={markers}
         paths={paths ?? []}
         mode="fullscreen"
+        isAdmin={isAdmin}
+        onSavePath={handleSavePath}
       />
 
       <div className="absolute left-3 top-3 z-[1000] flex max-w-[calc(100%-1.5rem)] items-center gap-2">

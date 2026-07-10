@@ -2,7 +2,17 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import L from "leaflet";
-import { MapContainer, TileLayer, Marker, Popup, Tooltip, useMap, ZoomControl, Polyline } from "react-leaflet";
+import {
+  MapContainer,
+  TileLayer,
+  Marker,
+  Popup,
+  Tooltip,
+  useMap,
+  useMapEvents,
+  ZoomControl,
+  Polyline,
+} from "react-leaflet";
 import { useRouter } from "next/navigation";
 
 function getParkingLabel(type) {
@@ -178,12 +188,50 @@ function LocateControl({
   return null;
 }
 
+function PathDrawingHandler({ enabled, onAddPoint }) {
+  useMapEvents({
+    click(event) {
+      if (!enabled) return;
+
+      onAddPoint([
+        event.latlng.lat,
+        event.latlng.lng,
+      ]);
+    },
+  });
+
+  return null;
+}
+
+function getLocationButtonLabel(marker) {
+  if (marker.type === "crag") {
+    return marker.label || "Crag";
+  }
+
+  if (marker.type?.startsWith("parking")) {
+    return getParkingLabel(marker.type);
+  }
+
+  if (marker.type === "sector") {
+    return marker.label || "Sector";
+  }
+
+  if (marker.type === "wall") {
+    return marker.label || "Wall";
+  }
+
+  return marker.label || marker.type || "Location";
+}
+
 export default function MapView({
   markers,
   paths = [],
   activeMarkerId,
   setActiveMarkerId,
   mode = "main",
+
+  isAdmin = false,
+  onSavePath,
 }) {
   console.log("Paths in MapView:", paths);
 
@@ -192,6 +240,13 @@ export default function MapView({
   const locateControlRef = useRef(null);
   const [locationError, setLocationError] = useState(null);
   const [locationRetrying, setLocationRetrying] = useState(false);
+
+  //About drawing paths
+  const [isDrawingPath, setIsDrawingPath] = useState(false);
+  const [draftPathPoints, setDraftPathPoints] = useState([]);
+  const [draftPathName, setDraftPathName] = useState("");
+  const [savingPath, setSavingPath] = useState(false);
+  const [pathSaveError, setPathSaveError] = useState(null);
 
   const isMainMap = mode === "main";
   const isFullscreenMap = mode === "fullscreen";
@@ -202,6 +257,18 @@ export default function MapView({
     () => markers.filter(marker => marker.lat && marker.lng),
     [markers]
   );
+
+  const selectableLocations = useMemo(() => {
+    return visibleMarkers.filter(marker =>
+      [
+        "crag",
+        "parking",
+        "sector",
+        "wall",
+      ].includes(marker.type) ||
+      marker.type?.startsWith("parking")
+    );
+  }, [visibleMarkers]);
 
   const visiblePaths = useMemo(() => {
     return paths
@@ -304,6 +371,22 @@ export default function MapView({
     }, 5000);
   }
 
+  function addDraftPoint(point) {
+    setDraftPathPoints(points => {
+      const lastPoint = points.at(-1);
+
+      if (
+        lastPoint &&
+        lastPoint[0] === point[0] &&
+        lastPoint[1] === point[1]
+      ) {
+        return points;
+      }
+
+      return [...points, point];
+    });
+  }
+
   return (
     <div
       className={
@@ -314,7 +397,7 @@ export default function MapView({
           : "h-full w-full overflow-hidden rounded"
       }
     >
-
+      {/* Show location error message in fullscreen mode */}
       {isFullscreenMap && locationError && (
         <div className="absolute bottom-3 left-3 z-[1000] max-w-[calc(100%-5rem)] rounded-md border bg-white p-3 text-sm shadow">
           <div>{locationError}</div>
@@ -330,6 +413,158 @@ export default function MapView({
         </div>
       )}
 
+      {/* Draw approach button for admins in fullscreen mode */}
+      {isFullscreenMap && isAdmin && !isDrawingPath && (
+        <button
+          type="button"
+          onClick={() => {
+            setDraftPathPoints([]);
+            setDraftPathName("");
+            setPathSaveError(null);
+            setIsDrawingPath(true);
+          }}
+          className="absolute right-3 top-3 z-[1000] rounded-md border bg-white px-3 py-2 text-sm shadow hover:bg-gray-50"
+        >
+          Draw path
+        </button>
+      )}
+
+      {/* Controls while drawing a path */}
+      {isFullscreenMap && isAdmin && isDrawingPath && (
+        <div className="absolute right-3 top-3 z-[1000] max-h-[calc(100%-1.5rem)] w-[min(22rem,calc(100%-1.5rem))] overflow-y-auto rounded-md border bg-white p-3 shadow">
+          <label className="block text-sm font-medium">
+            Path name
+          </label>
+
+          <input
+            type="text"
+            value={draftPathName}
+            onChange={event => {
+              setDraftPathName(event.target.value);
+            }}
+            placeholder="For example: P1 to main crag"
+            className="mt-1 w-full rounded border px-3 py-2 text-sm"
+          />
+
+          <div className="mt-3 text-sm">
+            Click the map to add points, or add a known location:
+          </div>
+
+          {selectableLocations.length > 0 && (
+            <div className="mt-2 flex flex-wrap gap-2">
+              {selectableLocations.map(marker => (
+                <button
+                  key={marker.id}
+                  type="button"
+                  onClick={() => {
+                    addDraftPoint([marker.lat, marker.lng]);
+                  }}
+                  className="rounded border bg-white px-2.5 py-1.5 text-sm hover:bg-gray-50"
+                >
+                  + {getLocationButtonLabel(marker)}
+                </button>
+              ))}
+            </div>
+          )}
+
+          <div className="mt-3 flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                setDraftPathPoints(points =>
+                  points.slice(0, -1)
+                );
+              }}
+              disabled={draftPathPoints.length === 0}
+              className="rounded border px-3 py-1.5 text-sm hover:bg-gray-50 disabled:opacity-50"
+            >
+              Undo
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                setDraftPathPoints([]);
+              }}
+              disabled={draftPathPoints.length === 0}
+              className="rounded border px-3 py-1.5 text-sm hover:bg-gray-50 disabled:opacity-50"
+            >
+              Clear
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                setDraftPathPoints([]);
+                setDraftPathName("");
+                setPathSaveError(null);
+                setIsDrawingPath(false);
+              }}
+              disabled={savingPath}
+              className="rounded border px-3 py-1.5 text-sm hover:bg-gray-50 disabled:opacity-50"
+            >
+              Cancel
+            </button>
+
+            <button
+              type="button"
+              onClick={async () => {
+                const trimmedName = draftPathName.trim();
+
+                if (
+                  draftPathPoints.length < 2 ||
+                  !trimmedName ||
+                  !onSavePath
+                ) {
+                  return;
+                }
+
+                setSavingPath(true);
+                setPathSaveError(null);
+
+                try {
+                  await onSavePath({
+                    name: trimmedName,
+                    points: draftPathPoints,
+                  });
+
+                  setDraftPathPoints([]);
+                  setDraftPathName("");
+                  setIsDrawingPath(false);
+                } catch (error) {
+                  console.error("Could not save path:", error);
+
+                  setPathSaveError(
+                    error?.message || "Could not save path."
+                  );
+                } finally {
+                  setSavingPath(false);
+                }
+              }}
+              disabled={
+                draftPathPoints.length < 2 ||
+                !draftPathName.trim() ||
+                savingPath ||
+                !onSavePath
+              }
+              className="rounded bg-gray-900 px-3 py-1.5 text-sm text-white hover:bg-gray-700 disabled:opacity-50"
+            >
+              {savingPath ? "Saving..." : "Save"}
+            </button>
+          </div>
+
+          <div className="mt-2 text-xs text-gray-500">
+            {draftPathPoints.length} points
+          </div>
+
+          {pathSaveError && (
+            <div className="mt-2 text-sm text-red-700">
+              {pathSaveError}
+            </div>
+          )}
+        </div>
+      )}
+
       <MapContainer
         center={[59.9139, 10.7522]}
         zoom={8}
@@ -340,12 +575,55 @@ export default function MapView({
       >
         <ResizeMap />
 
+        <PathDrawingHandler
+          enabled={isDrawingPath}
+          onAddPoint={addDraftPoint}
+        />
+
         {shouldFitMarkers && (  <FitMapToContent markers={visibleMarkers} paths={visiblePaths} /> )}
 
         <TileLayer
           attribution='&copy; OpenStreetMap contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
+
+        {draftPathPoints.length >= 2 && (
+          <Polyline
+            positions={draftPathPoints}
+            pathOptions={{
+              color: "#dc2626",
+              weight: 5,
+              opacity: 0.9,
+              dashArray: "8 8",
+              lineCap: "round",
+              lineJoin: "round",
+            }}
+          />
+        )}
+
+        {draftPathPoints.map((point, index) => (
+          <Marker
+            key={`${point[0]}-${point[1]}-${index}`}
+            position={point}
+            icon={L.divIcon({
+              className: "",
+              html: `
+                <div
+                  style="
+                    width: 12px;
+                    height: 12px;
+                    border: 2px solid white;
+                    border-radius: 9999px;
+                    background: #dc2626;
+                    box-shadow: 0 1px 3px rgba(0,0,0,0.5);
+                  "
+                ></div>
+              `,
+              iconSize: [12, 12],
+              iconAnchor: [6, 6],
+            })}
+          />
+        ))}
 
         {visiblePaths.map(path => (
           <Polyline
@@ -364,7 +642,7 @@ export default function MapView({
             </Tooltip>
           </Polyline>
         ))}
-        
+
         <ZoomControl position="bottomright" />
 
         <LocateControl
