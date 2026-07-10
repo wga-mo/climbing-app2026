@@ -1,10 +1,9 @@
 'use client';
 
-import { useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import L from "leaflet";
-import { MapContainer, TileLayer, Marker, Popup, Tooltip, useMap, ZoomControl, Circle } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Popup, Tooltip, useMap, ZoomControl } from "react-leaflet";
 import { useRouter } from "next/navigation";
-import { useUserLocation } from "@/hooks/useUserLocation";
 
 function getParkingLabel(type) {
   if (type === "parking") return "P";
@@ -55,19 +54,6 @@ function getMarkerIcon(marker) {
   });
 }
 
-function getUserLocationIcon() {
-  return L.divIcon({
-    className: "user-location-marker",
-    html: `
-      <div class="user-location-dot">
-        <div class="user-location-dot-inner"></div>
-      </div>
-    `,
-    iconSize: [24, 24],
-    iconAnchor: [12, 12],
-  });
-}
-
 function FitMapToMarkers({ markers }) {
   const map = useMap();
 
@@ -87,6 +73,108 @@ function FitMapToMarkers({ markers }) {
   return null;
 }
 
+function getLocationErrorMessage(error) {
+  const message = error?.message || "";
+
+  if (message.toLowerCase().includes("denied")) {
+    return "Location access is blocked. Allow location access in your browser's site settings and try again.";
+  }
+
+  if (message.toLowerCase().includes("unavailable")) {
+    return "Your location is currently unavailable.";
+  }
+
+  if (message.toLowerCase().includes("timeout")) {
+    return "Finding your location took too long. Try again.";
+  }
+
+  return "Could not determine your location.";
+}
+
+function LocateControl({
+  enabled,
+  onLocationError,
+  onLocationFound,
+  controlRef,
+}) {
+  const map = useMap();
+
+  useEffect(() => {
+    if (!enabled) return;
+
+    let control;
+    let cancelled = false;
+
+    function handleLocationFound() {
+      onLocationFound?.();
+    }
+
+    function handleLocationError(error) {
+      onLocationError?.(getLocationErrorMessage(error));
+    }
+
+    async function addLocateControl() {
+      const { LocateControl: LeafletLocateControl } = await import(
+        "leaflet.locatecontrol"
+      );
+
+      if (cancelled) return;
+
+      control = new LeafletLocateControl({
+        position: "bottomright",
+        flyTo: true,
+        setView: "untilPanOrZoom",
+        keepCurrentZoomLevel: false,
+        drawCircle: true,
+        drawMarker: true,
+        showCompass: true,
+        showPopup: false,
+        cacheLocation: true,
+        metric: true,
+        strings: {
+          title: "Show my location",
+        },
+        locateOptions: {
+          enableHighAccuracy: true,
+          watch: true,
+          maximumAge: 10000,
+          timeout: 15000,
+        },
+        onLocationError: handleLocationError,
+      }).addTo(map);
+
+      if (controlRef) {
+        controlRef.current = control;
+      }
+    }
+
+    map.on("locationfound", handleLocationFound);
+
+    addLocateControl();
+
+    return () => {
+      cancelled = true;
+      map.off("locationfound", handleLocationFound);
+
+      if (controlRef?.current === control) {
+        controlRef.current = null;
+      }
+
+      if (control) {
+        control.remove();
+      }
+    };
+  }, [
+    map,
+    enabled,
+    onLocationError,
+    onLocationFound,
+    controlRef,
+  ]);
+
+  return null;
+}
+
 export default function MapView({
   markers,
   activeMarkerId,
@@ -96,6 +184,9 @@ export default function MapView({
   
   const router = useRouter();
   const markerRefs = useRef({});
+  const locateControlRef = useRef(null);
+  const [locationError, setLocationError] = useState(null);
+  const [locationRetrying, setLocationRetrying] = useState(false);
 
   const isMainMap = mode === "main";
   const isFullscreenMap = mode === "fullscreen";
@@ -133,14 +224,38 @@ export default function MapView({
     return null;
   }
 
-  const {
-    location: userLocation,
-    loading: userLocationLoading,
-    error: userLocationError,
-  } = useUserLocation({
-    enabled: isFullscreenMap,
-    watch: true,
-  });
+  const handleLocationError = useCallback((message) => {
+    setLocationRetrying(false);
+    setLocationError(message);
+  }, []);
+
+  const handleLocationFound = useCallback(() => {
+    setLocationRetrying(false);
+    setLocationError(null);
+  }, []);
+
+  function retryLocation() {
+    const control = locateControlRef.current;
+
+    setLocationRetrying(true);
+
+    if (!control) {
+      setLocationRetrying(false);
+      setLocationError("Location control is not ready yet.");
+      return;
+    }
+
+    control.stop?.();
+
+    window.setTimeout(() => {
+      setLocationError(null);
+      control.start?.();
+    }, 150);
+
+    window.setTimeout(() => {
+      setLocationRetrying(false);
+    }, 5000);
+  }
 
   return (
     <div
@@ -153,15 +268,18 @@ export default function MapView({
       }
     >
 
-      {isFullscreenMap && userLocationLoading && (
-        <div className="absolute bottom-3 left-3 z-[1000] rounded-md border bg-white px-3 py-2 text-sm shadow">
-          Finding your location...
-        </div>
-      )}
+      {isFullscreenMap && locationError && (
+        <div className="absolute bottom-3 left-3 z-[1000] max-w-[calc(100%-5rem)] rounded-md border bg-white p-3 text-sm shadow">
+          <div>{locationError}</div>
 
-      {isFullscreenMap && userLocationError && (
-        <div className="absolute bottom-3 left-3 z-[1000] max-w-[calc(100%-5rem)] rounded-md border bg-white px-3 py-2 text-sm shadow">
-          {userLocationError}
+          <button
+            type="button"
+            onClick={retryLocation}
+            disabled={locationRetrying}
+            className="mt-2 rounded bg-gray-900 px-3 py-1.5 text-white hover:bg-gray-700 disabled:cursor-wait disabled:opacity-60"
+          >
+            {locationRetrying ? "Trying..." : "Try again"}
+          </button>
         </div>
       )}
 
@@ -183,6 +301,13 @@ export default function MapView({
         />
 
         <ZoomControl position="bottomright" />
+
+        <LocateControl
+          enabled={isFullscreenMap}
+          controlRef={locateControlRef}
+          onLocationError={handleLocationError}
+          onLocationFound={handleLocationFound}
+        />
 
         {visibleMarkers.map(marker => (
           <Marker
@@ -229,37 +354,7 @@ export default function MapView({
           </Marker>
         ))}
 
-        {userLocation && (
-          <>
-            <Marker
-              position={[userLocation.lat, userLocation.lng]}
-              icon={getUserLocationIcon()}
-              zIndexOffset={1000}
-            >
-              <Popup>
-                <div>
-                  <div className="font-medium">Your location</div>
-
-                  {userLocation.accuracy && (
-                    <div className="mt-1 text-xs text-gray-500">
-                      Accuracy: approximately{" "}
-                      {Math.round(userLocation.accuracy)} m
-                    </div>
-                  )}
-                </div>
-              </Popup>
-            </Marker>
-
-            <Circle
-              center={[userLocation.lat, userLocation.lng]}
-              radius={userLocation.accuracy}
-              pathOptions={{
-                weight: 1,
-                fillOpacity: 0.08,
-              }}
-            />
-          </>
-        )}
+       
           </MapContainer>
     </div>
   );
