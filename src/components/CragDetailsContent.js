@@ -120,6 +120,7 @@ export default function CragDetailsContent({
         locations={locations}
         routes={visibleRoutes}
         filters={filters}
+        sectorId={sectorId}
       >
 
       </CragOverview>

@@ -5,6 +5,9 @@ import GuidebooksList from "@/components/GuidebooksList";
 import GradeHistogram from "@/components/GradeHistogram";
 import CollapsibleText from "./CollapsableText";
 import { createDetailMarkers } from "@/utils/createDetailMarkers";
+import Link from "next/link";
+import { Expand } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
 
   const MapView = dynamic(
     () => import("@/components/MapView"),
@@ -20,8 +23,29 @@ export default function CragOverview({
   locations,
   routes,
   filters,
-  children,
+  sectorId,
+  children, 
 }) {
+
+  const router = useRouter();
+  const pathname = usePathname();
+
+  function openInteractiveMap(event) {
+    event.preventDefault();
+
+    // Update the current history entry without scrolling now.
+    window.history.replaceState(
+      window.history.state,
+      "",
+      `${pathname}#map`
+    );
+
+    router.push(mapHref);
+  }
+
+  const mapHref = sectorId
+  ? `/crag/${crag.crag_id}/map?sector=${sectorId}`
+  : `/crag/${crag.crag_id}/map`;
 
   const [showNavigationMenu, setShowNavigationMenu] = useState(false);
   const [rightPanelView, setRightPanelView] = useState("map");
@@ -55,47 +79,59 @@ export default function CragOverview({
 
   //useEffect to load overview images if it/they exist(s) and set overviewExists to true if at least one overview image is found
   useEffect(() => {
-  async function loadOverviews() {
-    if (!crag?.crag_id) return;
+    async function loadOverviews() {
+      if (!crag?.crag_id) return;
 
-    const folder = `crags/${crag.crag_id}`;
+      const folder = `crags/${crag.crag_id}`;
 
-    const { data: files, error } = await supabase.storage
-      .from("topos")
-      .list(folder);
+      const { data: files, error } = await supabase.storage
+        .from("topos")
+        .list(folder);
 
-    if (error) return;
+      if (error) return;
 
-    const overviewFiles = files.filter(file =>
-      // Vurder å gjøre endringer her hvis man i fremtiden ønsker å hente overview bilder relatert til sektoren. 
-      // Eks: pageInfo.type === 'sector' ? file.name.startsWith(`overview-sector-${sectorId}-`) : ...
-      file.name.startsWith("overview-")
-    );
+      const overviewFiles = files.filter(file =>
+        // Vurder å gjøre endringer her hvis man i fremtiden ønsker å hente overview bilder relatert til sektoren. 
+        // Eks: pageInfo.type === 'sector' ? file.name.startsWith(`overview-sector-${sectorId}-`) : ...
+        file.name.startsWith("overview-")
+      );
 
-    const signedUrls = await Promise.all(
-      overviewFiles.map(async (file) => {
-        const path = `${folder}/${file.name}`;
+      const signedUrls = await Promise.all(
+        overviewFiles.map(async (file) => {
+          const path = `${folder}/${file.name}`;
 
-        const { data } = await supabase.storage
-          .from("topos")
-          .createSignedUrl(path, 3600);
+          const { data } = await supabase.storage
+            .from("topos")
+            .createSignedUrl(path, 3600);
 
-        return {
-          name: file.name,
-          url: data?.signedUrl,
-        };
-      })
-    );
+          return {
+            name: file.name,
+            url: data?.signedUrl,
+          };
+        })
+      );
 
-    setOverviewImages(
-      signedUrls.filter(img => img.url)
-    );
-  }
+      setOverviewImages(
+        signedUrls.filter(img => img.url)
+      );
+    }
 
-  loadOverviews();
-}, [crag?.crag_id]);
+    loadOverviews();
+  }, [crag?.crag_id]);
 
+  //useEffect to scroll to map if URL hash is #map
+  useEffect(() => {
+    if (window.location.hash !== "#map") return;
 
+    const frameId = requestAnimationFrame(() => {
+      document.getElementById("map")?.scrollIntoView({
+        behavior: "auto",
+        block: "start",
+      });
+    });
+
+    return () => cancelAnimationFrame(frameId);
+  }, [crag.crag_id]);
 
   function formatValue(value) {
     if (value === 1) return "yes";
@@ -254,7 +290,10 @@ export default function CragOverview({
       </div>
 
       {/* Right side: map */}
-      <div className="flex flex-col rounded border p-4">
+      <div 
+        id="map"
+        className="scroll-mt-10 flex flex-col rounded border p-4"
+      >
         <div className="mb-3 flex items-center gap-4">
           
           {/* A Map button */}
@@ -283,15 +322,29 @@ export default function CragOverview({
               Overview {index + 1}
             </button>
           ))}
+
+          
         </div>
         
         <div className="min-h-[300px] flex-1 overflow-hidden rounded">
           
           {rightPanelView === "map" ? (
-            <MapView
-              markers={detailMarkers}
-              mode = "detail"
-            />
+            <div className="relative h-full w-full">
+              <MapView
+                markers={detailMarkers}
+                mode="detail"
+              />
+
+              <Link
+                href={mapHref}
+                onClick={openInteractiveMap}
+                aria-label="Open interactive map"
+                title="Open interactive map"
+                className="absolute right-3 top-3 z-[1000] rounded-md border bg-white/95 p-2 shadow hover:bg-white"
+              >
+                <Expand className="h-5 w-5" />
+              </Link>
+            </div>
           ) : (
             <img
               src={overviewImages.find(img => img.name === rightPanelView)?.url}

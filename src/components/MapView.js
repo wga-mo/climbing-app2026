@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef } from "react";
 import L from "leaflet";
-import { MapContainer, TileLayer, Marker, Popup, Tooltip, useMap } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Popup, Tooltip, useMap, ZoomControl } from "react-leaflet";
 import { useRouter } from "next/navigation";
 
 function getParkingLabel(type) {
@@ -83,6 +83,8 @@ export default function MapView({
   const markerRefs = useRef({});
 
   const isMainMap = mode === "main";
+  const isFullscreenMap = mode === "fullscreen";
+
   const shouldFitMarkers = mode ==="detail" || mode === "fullscreen";
 
   const visibleMarkers = useMemo(
@@ -119,16 +121,20 @@ export default function MapView({
   return (
     <div
       className={
-        isMainMap
-        ? "h-[calc(100vh-6rem)] w-full overflow-hidden rounded border"
-        : "h-full w-full overflow-hidden rounded"
+        isFullscreenMap
+        ? "h-full w-full overflow-hidden"
+        :  isMainMap
+          ? "h-[calc(100vh-6rem)] w-full overflow-hidden rounded border"
+          : "h-full w-full overflow-hidden rounded"
       }
     >
       <MapContainer
         center={[59.9139, 10.7522]}
         zoom={8}
-        scrollWheelZoom={true}
+        zoomControl={false}
+        scrollWheelZoom
         className="h-full w-full"
+        
       >
         <ResizeMap />
 
@@ -138,6 +144,8 @@ export default function MapView({
           attribution='&copy; OpenStreetMap contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
+
+        <ZoomControl position="bottomright" />
 
         {visibleMarkers.map(marker => (
           <Marker
