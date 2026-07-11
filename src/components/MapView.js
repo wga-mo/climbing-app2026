@@ -90,7 +90,7 @@ function getLocationErrorMessage(error) {
   const message = error?.message || "";
 
   if (message.toLowerCase().includes("denied")) {
-    return "Location access is blocked. Allow location access in your browser's site settings and try again.";
+    return "Location access is blocked. Allow location access in your phone's or browser's settings and try again.";
   }
 
   if (message.toLowerCase().includes("unavailable")) {

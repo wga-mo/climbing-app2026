@@ -6,6 +6,7 @@ import MapView from "@/components/MapView";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/context/AuthContext";
 import { createDetailMarkers } from "@/utils/createDetailMarkers";
+import { getDatabaseSources } from "@/utils/getDatabaseSources";
 
 export default function CragMapClient({
   cragId,
@@ -22,26 +23,14 @@ export default function CragMapClient({
   const userId = user?.id ?? null;
   const isAdmin = profile?.is_admin ?? false;
 
+  const sources = getDatabaseSources(Boolean(userId));
+
   useEffect(() => {
     if (authLoading) return;
 
     async function fetchMapData() {
       setLoading(true);
       setError(null);
-
-      const cragSource = userId
-        ? "crags"
-        : "public_crag_preview";
-
-      const sectorSource = userId
-        ? "sectors"
-        : "public_sector_preview";
-
-      const locationSource = userId
-        ? "locations"
-        : "public_location_preview";
-
-      const pathsSource = "map_paths";
 
       const [
         { data: cragData, error: cragError },
@@ -50,20 +39,20 @@ export default function CragMapClient({
         { data: pathsData, error: pathsError },
       ] = await Promise.all([
         supabase
-          .from(cragSource)
+          .from(sources.crags)
           .select("crag_id, crag_name")
           .eq("crag_id", cragId)
           .single(),
 
         supabase
-          .from(locationSource)
+          .from(sources.locations)
           .select(
             "location_id, crag_id, sector_id, type, lat, lng, comment"
           )
           .eq("crag_id", cragId),
 
         supabase
-          .from(sectorSource)
+          .from(sources.sectors)
           .select(
             "sector_id, crag_id, name, parent_sector_id, sector_type"
           )
@@ -71,7 +60,7 @@ export default function CragMapClient({
           .order("sector_in_crag"),
           
         supabase
-          .from(pathsSource)
+          .from(sources.paths)
           .select("path_id, name, path_type, geometry")
           .eq("crag_id", cragId),
       ]);
@@ -85,17 +74,11 @@ export default function CragMapClient({
       }
 
       if (locationError) {
-        console.error(
-          "Error fetching locations:",
-          locationError
-        );
+        console.error("Error fetching locations:", locationError);
       }
 
       if (sectorError) {
-        console.error(
-          "Error fetching sectors:",
-          sectorError
-        );
+        console.error("Error fetching sectors:", sectorError);
       }
 
       if (pathsError) {
@@ -175,7 +158,7 @@ export default function CragMapClient({
     };
 
     const { data, error } = await supabase
-        .from("map_paths")
+        .from(sources.paths)
         .insert({
         crag_id: cragId,
         name,
