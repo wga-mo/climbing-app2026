@@ -14,6 +14,7 @@ import {
   Polyline,
 } from "react-leaflet";
 import { useRouter } from "next/navigation";
+import MapStyleControl from "@/components/MapStyleControl";
 
 function getParkingLabel(type) {
   if (type === "parking") return "P";
@@ -582,10 +583,7 @@ export default function MapView({
 
         {shouldFitMarkers && (  <FitMapToContent markers={visibleMarkers} paths={visiblePaths} /> )}
 
-        <TileLayer
-          attribution='&copy; OpenStreetMap contributors'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        />
+        <MapStyleControl />
 
         {draftPathPoints.length >= 2 && (
           <Polyline
