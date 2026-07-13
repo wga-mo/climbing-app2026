@@ -1,52 +1,115 @@
-'use client';
+"use client";
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import ImageViewer from "./ImageViewer";
 
 export default function SectorTopo({ sector, sectorId = null }) {
   const [open, setOpen] = useState(false);
   const [imageUrl, setImageUrl] = useState(null);
   const [errorMessage, setErrorMessage] = useState("");
 
-  const hasTopo = !!sector.sector_in_crag && !!sector.topo_extension;
-
   const isSectorPage = !!sectorId;
-  
-  const path = isSectorPage
-    ? `crags/${sectorId}/sector-${sector.sector_in_crag}.${sector.topo_extension}`
-    : `crags/${sector.crag_id}/sector-${sector.sector_in_crag}.${sector.topo_extension}`;
-  
+
+  const topoFolderId = isSectorPage
+    ? sectorId
+    : sector.crag_id;
+
+  const hasTopo =
+    !!sector.sector_in_crag &&
+    !!sector.topo_extension;
+
   useEffect(() => {
-    if (!hasTopo) return;
+    if (!hasTopo) {
+      setImageUrl(null);
+      return;
+    }
 
     let cancelled = false;
+    let objectUrl = null;
 
     async function loadTopo() {
-    try {
-      setImageUrl(null);
-      setErrorMessage("");
+      try {
+        setImageUrl(null);
+        setErrorMessage("");
 
-      const { data, error } =
-        await supabase.storage
-          .from("topos")
-          .createSignedUrl(path, 3600);
+        const {
+          data: { session },
+          error: sessionError,
+        } = await supabase.auth.getSession();
 
-      if (error) throw error;
+        if (sessionError) {
+          throw sessionError;
+        }
 
-      setImageUrl(data.signedUrl);
-    } catch (err) {
-      console.error("Topo loading failed:", err);
-      setErrorMessage("Could not load topo.");
+        if (!session?.access_token) {
+          throw new Error("You must be logged in to view this topo.");
+        }
+
+        const response = await fetch(
+          `/api/topo/${topoFolderId}/${sector.sector_id}`,
+          {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${session.access_token}`,
+            },
+            cache: "no-store",
+          }
+        );
+
+        if (!response.ok) {
+          let apiMessage = "";
+
+          try {
+            const result = await response.json();
+            apiMessage = result?.error ?? "";
+          } catch {
+            // The response was not JSON.
+          }
+
+          throw new Error(
+            apiMessage || `Could not load topo (${response.status}).`
+          );
+        }
+
+        const imageBlob = await response.blob();
+
+        if (!imageBlob.type.startsWith("image/")) {
+          throw new Error("The server did not return a valid image.");
+        }
+
+        objectUrl = URL.createObjectURL(imageBlob);
+
+        if (!cancelled) {
+          setImageUrl(objectUrl);
+        }
+      } catch (error) {
+        console.error("Topo loading failed:", error);
+
+        if (!cancelled) {
+          setErrorMessage(
+            error instanceof Error
+              ? error.message
+              : "Could not load topo."
+          );
+        }
+      }
     }
-  }
 
-  loadTopo();
-}, [
-  hasTopo,
-  sector.crag_id,
-  sector.sector_in_crag,
-  sector.topo_extension
-]);
+    loadTopo();
+
+    return () => {
+      cancelled = true;
+
+      if (objectUrl) {
+        URL.revokeObjectURL(objectUrl);
+      }
+    };
+  }, [
+    hasTopo,
+    topoFolderId,
+    sector.sector_id,
+  ]);
 
   if (!hasTopo) {
     return (
@@ -58,7 +121,7 @@ export default function SectorTopo({ sector, sectorId = null }) {
 
   if (errorMessage) {
     return (
-      <div className="flex h-[300px] items-center justify-center rounded bg-gray-100 text-gray-500">
+      <div className="flex h-[300px] items-center justify-center rounded bg-gray-100 px-4 text-center text-gray-500">
         {errorMessage}
       </div>
     );
@@ -77,28 +140,19 @@ export default function SectorTopo({ sector, sectorId = null }) {
       <img
         src={imageUrl}
         alt={`${sector.name} topo`}
-        className="w-full cursor-zoom-in rounded object-contain"
+        className="w-full cursor-zoom-in select-none rounded object-contain"
+        draggable={false}
+        onDragStart={(event) => event.preventDefault()}
+        onContextMenu={(event) => event.preventDefault()}
         onClick={() => setOpen(true)}
       />
 
-      {open && (
-        <div className="fixed inset-0 z-[99999] bg-black/90 p-4">
-          <button
-            onClick={() => setOpen(false)}
-            className="absolute right-4 top-4 rounded bg-white px-3 py-1 text-sm"
-          >
-            Close
-          </button>
-
-          <div className="flex h-full items-center justify-center overflow-auto pt-10">
-            <img
-              src={imageUrl}
-              alt={`${sector.name} topo enlarged`}
-              className="max-h-none max-w-none rounded"
-            />
-          </div>
-        </div>
-      )}
+      <ImageViewer
+        src={imageUrl}
+        alt={`${sector.name} topo enlarged`}
+        open={open}
+        onClose={() => setOpen(false)}
+      />
     </>
   );
 }
