@@ -7,6 +7,7 @@ export default function FiltersSidebar({ filters, setFilters, mobile = false, mo
   const regionOptions = [
     { label: "Oslo", value: "Oslo" },
     { label: "Vestland", value: "Vestland" },
+    { label: "Sogn og Fjordane", value: "Sogn og Fjordane" },
   ];
 
   function handleRegionChange(regionValue) {
