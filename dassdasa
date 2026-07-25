@@ -1,0 +1,5 @@
+[33m5d3da27[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m Added Sogn og Fjordane i FilterSidebar
+[33mebf5b7c[m Added watermarks to topos
+[33m8a426df[m 1) Improved topo security by replacing client-side signed URLs with a protected authenticated API endpoint. 2) Extracted the fullscreen image viewer into a reusable component with pinch-to-zoom, pan, mouse wheel zoom, and keyboard (Esc) support.
+[33mb184305[m Added different TileProviders and functionality to switch between them
+[33ma3b3aad[m Done some refactoring in CragDetailsClient and CragMapClient, extracted getDatabaseSource in utility file
