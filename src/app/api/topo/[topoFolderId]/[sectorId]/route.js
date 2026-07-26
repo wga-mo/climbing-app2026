@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
+import sharp from "sharp";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -206,26 +207,22 @@ export async function GET(request, { params }) {
       );
     }
 
-    const imageBytes = await topoBlob.arrayBuffer();
+    const originalImage = Buffer.from(
+      await topoBlob.arrayBuffer()
+    );
 
-    return new Response(imageBytes, {
+    const watermarkedImage = await addWatermark(
+      originalImage,
+      user.email ?? "private"
+    );
+
+    return new Response(watermarkedImage, {
       status: 200,
       headers: {
         "Content-Type": getContentType(extension),
-
-        /*
-         * Tell the browser to display rather than suggest downloading.
-         * This is not a hard security boundary, but is preferable.
-         */
         "Content-Disposition": "inline",
-
         "Cache-Control": "private, max-age=3600",
-
         "X-Content-Type-Options": "nosniff",
-
-        /*
-         * The response differs based on the logged-in user token.
-         */
         Vary: "Authorization",
       },
     });
@@ -237,6 +234,139 @@ export async function GET(request, { params }) {
       { status: 500 }
     );
   }
+}
+
+async function addWatermark(imageBuffer, email) {
+  const image = sharp(imageBuffer);
+  const metadata = await image.metadata();
+
+  const width = metadata.width;
+  const height = metadata.height;
+
+  if (!width || !height) {
+    throw new Error("Could not determine topo dimensions.");
+  }
+
+  const safeEmail = escapeSvgText(email);
+
+  /*
+   * Scale the watermark according to the image size.
+   * This keeps it readable on both small and large topo files.
+   */
+  const fontSize = Math.max(
+    12,
+    Math.min(24, Math.round(width / 55))
+  );
+
+  const horizontalSpacing = Math.max(
+    170,
+    Math.round(fontSize * 10)
+  );
+
+  const verticalSpacing = Math.max(
+    95,
+    Math.round(fontSize * 4.5)
+  );
+
+  const rows = [];
+
+  /*
+   * Start outside the visible image because rotating the text
+   * shifts its visible position.
+   */
+  for (
+    let y = -height;
+    y < height * 2;
+    y += verticalSpacing
+  ) {
+    const offset =
+      Math.floor(y / verticalSpacing) % 2 === 0
+        ? 0
+        : horizontalSpacing / 2;
+
+    for (
+      let x = -width - offset;
+      x < width * 2;
+      x += horizontalSpacing
+    ) {
+      rows.push(`
+        <text
+          x="${x}"
+          y="${y}"
+          transform="rotate(-28 ${x} ${y})"
+          text-anchor="middle"
+          font-family="Arial, Helvetica, sans-serif"
+          font-size="${fontSize}"
+          font-weight="600"
+          fill="rgba(255,255,255,0.24)"
+          stroke="rgba(0,0,0,0.18)"
+          stroke-width="0.8"
+          paint-order="stroke"
+        >
+          ${safeEmail}
+        </text>
+      `);
+    }
+  }
+
+  const watermarkSvg = Buffer.from(`
+    <svg
+      width="${width}"
+      height="${height}"
+      viewBox="0 0 ${width} ${height}"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      ${rows.join("")}
+    </svg>
+  `);
+
+  const pipeline = image.composite([
+    {
+      input: watermarkSvg,
+      top: 0,
+      left: 0,
+    },
+  ]);
+
+  switch (metadata.format) {
+    case "jpeg":
+      return pipeline
+        .jpeg({
+          quality: 92,
+          mozjpeg: true,
+        })
+        .toBuffer();
+
+    case "png":
+      return pipeline
+        .png({
+          compressionLevel: 6,
+        })
+        .toBuffer();
+
+    case "webp":
+      return pipeline
+        .webp({
+          quality: 92,
+        })
+        .toBuffer();
+
+    default:
+      /*
+       * GIF input would lose animation when processed by Sharp.
+       * Topos are normally static, so PNG is a safe fallback.
+       */
+      return pipeline.png().toBuffer();
+  }
+}
+
+function escapeSvgText(value) {
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&apos;");
 }
 
 function getContentType(extension) {
