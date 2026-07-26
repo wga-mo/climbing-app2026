@@ -19,6 +19,52 @@ export default function SectorTopo({ sector, sectorId = null }) {
     !!sector.sector_in_crag &&
     !!sector.topo_extension;
 
+    const topoRequestCache = new Map();
+
+  async function fetchTopo(url, accessToken) {
+    const cacheKey = `${url}:${accessToken}`;
+
+    if (!topoRequestCache.has(cacheKey)) {
+      const request = fetch(url, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      })
+        .then(async (response) => {
+          if (!response.ok) {
+            let apiMessage = "";
+
+            try {
+              const result = await response.json();
+              apiMessage = result?.error ?? "";
+            } catch {
+              // Response was not JSON.
+            }
+
+            throw new Error(
+              apiMessage || `Could not load topo (${response.status}).`
+            );
+          }
+
+          const imageBlob = await response.blob();
+
+          if (!imageBlob.type.startsWith("image/")) {
+            throw new Error("The server did not return a valid image.");
+          }
+
+          return imageBlob;
+        })
+        .catch((error) => {
+          topoRequestCache.delete(cacheKey);
+          throw error;
+        });
+
+      topoRequestCache.set(cacheKey, request);
+    }
+
+    return topoRequestCache.get(cacheKey);
+  }
+
   useEffect(() => {
     if (!hasTopo) {
       setImageUrl(null);
@@ -46,37 +92,13 @@ export default function SectorTopo({ sector, sectorId = null }) {
           throw new Error("You must be logged in to view this topo.");
         }
 
-        const response = await fetch(
-          `/api/topo/${topoFolderId}/${sector.sector_id}`,
-          {
-            method: "GET",
-            headers: {
-              Authorization: `Bearer ${session.access_token}`,
-            },
-            cache: "no-store",
-          }
+        const topoApiUrl =
+          `/api/topo/${topoFolderId}/${sector.sector_id}`;
+
+        const imageBlob = await fetchTopo(
+          topoApiUrl,
+          session.access_token
         );
-
-        if (!response.ok) {
-          let apiMessage = "";
-
-          try {
-            const result = await response.json();
-            apiMessage = result?.error ?? "";
-          } catch {
-            // The response was not JSON.
-          }
-
-          throw new Error(
-            apiMessage || `Could not load topo (${response.status}).`
-          );
-        }
-
-        const imageBlob = await response.blob();
-
-        if (!imageBlob.type.startsWith("image/")) {
-          throw new Error("The server did not return a valid image.");
-        }
 
         objectUrl = URL.createObjectURL(imageBlob);
 

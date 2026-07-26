@@ -122,49 +122,42 @@ export async function GET(request, { params }) {
       .eq("sector_id", parsedSectorId)
       .maybeSingle();
 
-  if (sectorError) {
-  console.error("Could not find topo sector:", sectorError);
+    if (sectorError) {
+      console.error("Could not find topo sector:", sectorError);
 
-  return Response.json(
-    { error: "Could not load topo." },
-    { status: 500 }
-  );
-}
+      return Response.json(
+        { error: "Could not load topo." },
+        { status: 500 }
+      );
+    }
 
-if (!sector) {
-  return Response.json(
-    { error: "Topo sector not found." },
-    { status: 404 }
-  );
-}
+    if (!sector) {
+      return Response.json(
+        { error: "Topo sector not found." },
+        { status: 404 }
+      );
+    }
 
-if (!sector.topo_extension) {
-  return Response.json(
-    { error: "Topo not found." },
-    { status: 404 }
-  );
-}
-
-const expectedFolderId =
-  sector.parent_sector_id ?? sector.crag_id;
-
-if (parsedTopoFolderId !== Number(expectedFolderId)) {
-  console.error("Invalid topo folder:", {
-    requestedFolder: parsedTopoFolderId,
-    expectedFolder: expectedFolderId,
-    sectorId: sector.sector_id,
-  });
-
-  return Response.json(
-    { error: "Invalid topo location." },
-    { status: 403 }
-  );
-}
-
-    if (!sector?.topo_extension) {
+    if (!sector.topo_extension) {
       return Response.json(
         { error: "Topo not found." },
         { status: 404 }
+      );
+    }
+
+    const expectedFolderId =
+      sector.parent_sector_id ?? sector.crag_id;
+
+    if (parsedTopoFolderId !== Number(expectedFolderId)) {
+      console.error("Invalid topo folder:", {
+        requestedFolder: parsedTopoFolderId,
+        expectedFolder: expectedFolderId,
+        sectorId: sector.sector_id,
+      });
+
+      return Response.json(
+        { error: "Invalid topo location." },
+        { status: 403 }
       );
     }
 
@@ -226,13 +219,7 @@ if (parsedTopoFolderId !== Number(expectedFolderId)) {
          */
         "Content-Disposition": "inline",
 
-        /*
-         * Avoid long-lived browser, CDN and intermediary caches.
-         */
-        "Cache-Control":
-          "private, no-store, no-cache, must-revalidate, max-age=0",
-        Pragma: "no-cache",
-        Expires: "0",
+        "Cache-Control": "private, max-age=3600",
 
         "X-Content-Type-Options": "nosniff",
 
