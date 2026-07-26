@@ -21,6 +21,7 @@ export const defaultFilters = {
   sortColumn: "total_routes",
   sortDirection: "desc",
   searchText: "",
+  showProjects: false,
 };
 
 export function FiltersProvider({ children }) {

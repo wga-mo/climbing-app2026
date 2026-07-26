@@ -4,6 +4,7 @@ import { useAuth } from "@/context/AuthContext";
 
 export default function FiltersSidebar({ filters, setFilters, mobile = false, mode="main" }) {
 
+  console.log(filters);
   const regionOptions = [
     { label: "Oslo", value: "Oslo" },
     { label: "Vestland", value: "Vestland" },
@@ -160,36 +161,50 @@ export default function FiltersSidebar({ filters, setFilters, mobile = false, mo
           </div>
 
           <div className="relative mt-4 h-6">
-    {/* Gray background line */}
-    <div className="absolute top-1/2 h-1 w-full -translate-y-1/2 rounded bg-gray-200" />
+            {/* Gray background line */}
+            <div className="absolute top-1/2 h-1 w-full -translate-y-1/2 rounded bg-gray-200" />
 
-    {/* Black selected range */}
-    <div
-      className="absolute top-1/2 h-1 -translate-y-1/2 rounded bg-black"
-      style={{
-        left: `${(filters.gradeMin / 37) * 100}%`,
-        width: `${((filters.gradeMax - filters.gradeMin) / 37) * 100}%`,
-      }}
-    />
+            {/* Black selected range */}
+            <div
+              className="absolute top-1/2 h-1 -translate-y-1/2 rounded bg-black"
+              style={{
+                left: `${(filters.gradeMin / 37) * 100}%`,
+                width: `${((filters.gradeMax - filters.gradeMin) / 37) * 100}%`,
+              }}
+            />
 
-    <input
-      type="range"
-      min="1"
-      max="37"
-      value={filters.gradeMin}
-      onChange={handleGradeMinChange}
-      className="range-thumb pointer-events-none absolute top-1/2 w-full -translate-y-1/2 appearance-none bg-transparent"
-    />
+            <input
+              type="range"
+              min="1"
+              max="37"
+              value={filters.gradeMin}
+              onChange={handleGradeMinChange}
+              className="range-thumb pointer-events-none absolute top-1/2 w-full -translate-y-1/2 appearance-none bg-transparent"
+            />
 
-    <input
-      type="range"
-      min="1"
-      max="37"
-      value={filters.gradeMax}
-      onChange={handleGradeMaxChange}
-      className="range-thumb pointer-events-none absolute top-1/2 w-full -translate-y-1/2 appearance-none bg-transparent"
-    />
-  </div>
+            <input
+              type="range"
+              min="1"
+              max="37"
+              value={filters.gradeMax}
+              onChange={handleGradeMaxChange}
+              className="range-thumb pointer-events-none absolute top-1/2 w-full -translate-y-1/2 appearance-none bg-transparent"
+            />
+          </div>
+
+          <label className="mt-2 flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={filters.showProjects}
+              onChange={(e) =>
+                setFilters((current) => ({
+                  ...current,
+                  showProjects: e.target.checked,
+                }))
+              }
+            />
+            Show projects
+          </label>
         </section>
 
         {/* Pitches filter */}

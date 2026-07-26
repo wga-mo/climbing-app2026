@@ -17,8 +17,15 @@ export function doesRouteMatchFilters(route, filters) {
     (filters.p_m && route.pitches > 1);
 
   const gradeMatch =
-    route.grade_int >= filters.gradeMin &&
-    route.grade_int <= filters.gradeMax;
+    (
+      route.grade_int > 0 &&
+      route.grade_int >= filters.gradeMin &&
+      route.grade_int <= filters.gradeMax
+    ) ||
+    (
+      filters.showProjects &&
+      route.grade_int === 0
+    );
 
   return (
     styleMatch &&

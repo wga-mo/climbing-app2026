@@ -53,6 +53,8 @@ export function useCrags(filters) {
           w_time: filters.globalFilter ? filters.w_time : 1000,
 
           regions: filters.selectedRegions ?? null,
+
+          show_projects: filters.showProjects,
         });
 
         if (error) {
