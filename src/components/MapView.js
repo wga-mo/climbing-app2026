@@ -4,7 +4,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import L from "leaflet";
 import {
   MapContainer,
-  TileLayer,
   Marker,
   Popup,
   Tooltip,
@@ -74,7 +73,12 @@ function FitMapToContent({ markers, paths }) {
       ...paths.flatMap(path => path.positions),
     ];
 
-    if (!positions.length) return;
+    if (positions.length === 0) return;
+
+    if (positions.length === 1) {
+      map.setView(positions[0], 12);
+      return;
+    }
 
     const bounds = L.latLngBounds(positions);
 
@@ -250,8 +254,6 @@ export default function MapView({
 
   const isMainMap = mode === "main";
   const isFullscreenMap = mode === "fullscreen";
-
-  const shouldFitMarkers = mode ==="detail" || mode === "fullscreen";
 
   const visibleMarkers = useMemo(
     () => markers.filter(marker => marker.lat && marker.lng),
@@ -580,7 +582,7 @@ export default function MapView({
           onAddPoint={addDraftPoint}
         />
 
-        {shouldFitMarkers && (  <FitMapToContent markers={visibleMarkers} paths={visiblePaths} /> )}
+        <FitMapToContent markers={visibleMarkers} paths={visiblePaths} />
 
         <MapStyleControl />
 

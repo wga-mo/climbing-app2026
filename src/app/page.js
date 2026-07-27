@@ -47,12 +47,16 @@ export default function HomePage() {
       </section>
 
       <section className="w-[45%] min-w-[500px] border-l p-4">
-        <MapView
-          markers={markers}
-          activeMarkerId={activeCragId}
-          setActiveMarkerId={setActiveCragId}
-          mode = "main"
-        />
+        {loading ? (
+          <div className="h-[calc(100vh-6rem)] w-full rounded border bg-gray-50" />
+        ) : (
+          <MapView
+            markers={markers}
+            activeMarkerId={activeCragId}
+            setActiveMarkerId={setActiveCragId}
+            mode="main"
+          />
+        )}
       </section>
     </main>
 
@@ -69,12 +73,16 @@ export default function HomePage() {
         </section>
       ) : (
         <section className="flex-1 min-h-0 min-w-0 overflow-auto p-4">
-          <MapView
-            markers={markers}
-            activeMarkerId={activeCragId}
-            setActiveMarkerId={setActiveCragId}
-            mode = "main"
-          />
+          {loading ? (
+            <div className="h-full w-full rounded border bg-gray-50" />
+          ) : (
+            <MapView
+              markers={markers}
+              activeMarkerId={activeCragId}
+              setActiveMarkerId={setActiveCragId}
+              mode="main"
+            />
+          )}
         </section>
       )}
     </main>
