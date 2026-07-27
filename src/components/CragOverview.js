@@ -28,8 +28,6 @@ export default function CragOverview({
   children, 
 }) {
 
-  console.log("Paths in CragOverview:", paths);
-
   const router = useRouter();
   const pathname = usePathname();
 

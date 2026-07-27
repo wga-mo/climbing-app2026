@@ -1,15 +1,46 @@
 import { gradeConversion } from "@/utils/gradeConversion";
 import { useFilters } from "@/context/FiltersContext";
 import { useAuth } from "@/context/AuthContext";
+import { hostnameCrags } from "@/utils/hostnameCrags";
+import { useState, useEffect } from "react";
+import { supabase } from "@/lib/supabase";
 
 export default function FiltersSidebar({ filters, setFilters, mobile = false, mode="main" }) {
 
-  console.log(filters);
-  const regionOptions = [
-    { label: "Oslo", value: "Oslo" },
-    { label: "Vestland", value: "Vestland" },
-    { label: "Sogn og Fjordane", value: "Sogn og Fjordane" },
-  ];
+  const [regionOptions, setRegionOptions] = useState([]);
+
+  useEffect(() => {
+    async function loadRegions() {
+      const { regions: allowedRegions } = hostnameCrags();
+
+      let query = supabase
+        .from("crags")
+        .select("region")
+        .order("region");
+
+      if (allowedRegions) {
+        query = query.in("region", allowedRegions);
+      }
+
+      const { data, error } = await query;
+
+      if (error) {
+        console.error(error);
+        return;
+      }
+
+      const unique = [...new Set(data.map(r => r.region))];
+
+      setRegionOptions(
+        unique.map(region => ({
+          label: region,
+          value: region,
+        }))
+      );
+    }
+
+    loadRegions();
+  }, []);
 
   function handleRegionChange(regionValue) {
     setFilters(prev => {

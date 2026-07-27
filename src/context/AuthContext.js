@@ -60,7 +60,7 @@ export function AuthProvider({ children }) {
 
 return () => subscription.unsubscribe();
   }, []);
-  console.log("AuthContext state:", { user, profile, loading });
+  //console.log("AuthContext state:", { user, profile, loading });
   
   return (
     <AuthContext.Provider

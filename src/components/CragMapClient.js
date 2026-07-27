@@ -97,8 +97,6 @@ export default function CragMapClient({
 
   }, [cragId, userId, authLoading]);
 
-  console.log("Paths fetched:", paths);
-
   const markers = useMemo(() => {
     if (!crag) return [];
 

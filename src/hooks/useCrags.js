@@ -23,8 +23,8 @@ export function useCrags(filters) {
           setLoading(true);
         }
 
-        const { cragMin, cragMax } = hostnameCrags();
-        
+        const { regions: allowedRegions } = hostnameCrags();
+          
         const { data, error } = await supabase.rpc("crag_grade_summary", {
           grade_1_min: 1,
           grade_1_max: 9,
@@ -52,9 +52,10 @@ export function useCrags(filters) {
           d_time: filters.globalFilter ? filters.d_time : 1000,
           w_time: filters.globalFilter ? filters.w_time : 1000,
 
-          regions: filters.selectedRegions ?? null,
-
           show_projects: filters.showProjects,
+
+          regions: filters.selectedRegions ?? [],
+          allowed_regions: allowedRegions?.length ? allowedRegions : null,
         });
 
         if (error) {
@@ -64,11 +65,7 @@ export function useCrags(filters) {
           return;
         }
 
-        let filteredData = (data || []).filter(
-          crag =>
-            crag.crag_id >= cragMin &&
-            crag.crag_id <= cragMax
-        );
+        let filteredData = data || [];
 
         if (search) {
           const pattern = `%${search}%`;

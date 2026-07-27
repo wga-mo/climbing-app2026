@@ -234,7 +234,6 @@ export default function MapView({
   isAdmin = false,
   onSavePath,
 }) {
-  console.log("Paths in MapView:", paths);
 
   const router = useRouter();
   const markerRefs = useRef({});

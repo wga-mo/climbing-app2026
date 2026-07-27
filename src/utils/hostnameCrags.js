@@ -1,34 +1,23 @@
 export function hostnameCrags() {
-    const hostname = window.location.hostname;
-    // console.log("Hostname:", hostname);
+  const hostname = window.location.hostname;
 
-    const SITE_CONFIG = {
-        localhost: {
-        cragMin: 1,
-        cragMax: 9999,
-        },
+  const SITE_CONFIG = {
+    localhost: {
+      regions: null, // null = all regions
+    },
 
-        //Oslo
-        "climbing2026.vercel.app": {
-        cragMin: 127,
-        cragMax: 153,
-        },
-        
-        //Drammen
-        "klatring2026.vercel.app": {
-        cragMin: 154,
-        cragMax: 186,
-        },
-    };
+    "climbing2026.vercel.app": {
+      regions: ["Oslo"],
+    },
 
-    const config =
-        SITE_CONFIG[hostname] ?? {
-        cragMin: 1,
-        cragMax: 9999,
-        };
+    "klatring2026.vercel.app": {
+      regions: ["Drammen"],
+    },
 
-    const { cragMin, cragMax } = config;
+    "klatring-gol-og-hemsedal.vercel.app": {
+      regions: ["Gol og Hemsedal"],
+    },
+  };
 
-    return { cragMin, cragMax };
-
+  return SITE_CONFIG[hostname] ?? { regions: null };
 }
