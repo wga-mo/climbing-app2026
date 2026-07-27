@@ -18,7 +18,6 @@ export function useCrags(filters) {
       async function fetchCrags() {
         const search = filters.searchText?.trim() ?? "";
         
-
         if (!hasLoadedOnce) {
           setLoading(true);
         }
@@ -55,7 +54,7 @@ export function useCrags(filters) {
           show_projects: filters.showProjects,
 
           regions: filters.selectedRegions ?? [],
-          allowed_regions: allowedRegions?.length ? allowedRegions : null,
+          allowed_regions: allowedRegions,
         });
 
         if (error) {

@@ -1,6 +1,7 @@
 'use client';
 
 import { createContext, useContext, useEffect, useState } from "react";
+import { hostnameCrags } from "@/utils/hostnameCrags";
 
 const FiltersContext = createContext(null);
 
@@ -17,7 +18,7 @@ export const defaultFilters = {
   p_m: false,
   d_time: 120,
   w_time: 45,
-  selectedRegions: ["Oslo"],
+  selectedRegions: [],
   sortColumn: "total_routes",
   sortDirection: "desc",
   searchText: "",
@@ -35,15 +36,34 @@ export function FiltersProvider({ children }) {
   useEffect(() => {
     try {
       const storedFilters = localStorage.getItem(FILTER_STORAGE_KEY);
+      const { regions: allowedRegions } = hostnameCrags();
 
       if (storedFilters) {
+        const parsedFilters = JSON.parse(storedFilters);
+
         setFilters({
           ...defaultFilters,
-          ...JSON.parse(storedFilters),
+          ...parsedFilters,
+          selectedRegions:
+            parsedFilters.selectedRegions !== undefined
+              ? parsedFilters.selectedRegions
+              : allowedRegions ?? [],
+        });
+      } else {
+        setFilters({
+          ...defaultFilters,
+          selectedRegions: allowedRegions ?? [],
         });
       }
     } catch (error) {
       console.error("Could not load filters:", error);
+
+      const { regions: allowedRegions } = hostnameCrags();
+
+      setFilters({
+        ...defaultFilters,
+        selectedRegions: allowedRegions ?? [],
+      });
     } finally {
       setFiltersLoaded(true);
     }
