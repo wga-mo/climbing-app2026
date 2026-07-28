@@ -315,7 +315,7 @@ async function addWatermark(imageBuffer, email) {
         transform="rotate(-28 ${tileWidth / 2} ${tileHeight / 2})"
         text-anchor="middle"
         dominant-baseline="middle"
-        font-family="Arial, Helvetica, sans-serif"
+        font-family="DejaVu Sans"
         font-size="${fontSize}"
         font-weight="600"
         fill="#ffffff"
