@@ -256,14 +256,14 @@ console.log("Debug upload:", uploadError);
 return new Response(watermarkedImage, {
   status: 200,
   headers: {
-    "Content-Type": "image/jpeg",
+    "Content-Type": getContentType(outputMetadata.format),
     "Content-Length": String(watermarkedImage.length),
     "Content-Disposition": "inline",
     "Cache-Control": "private, no-store",
     "X-Content-Type-Options": "nosniff",
     Vary: "Authorization",
   },
-});    
+}); 
     
   } catch (error) {
     console.error("Unexpected topo API error:", error);
@@ -275,13 +275,101 @@ return new Response(watermarkedImage, {
   }
 }
 
-async function addWatermark(imageBuffer) {
-  return sharp(imageBuffer)
-    .jpeg({
-      quality: 92,
-      mozjpeg: true,
-    })
-    .toBuffer();
+async function addWatermark(imageBuffer, email) {
+  const metadata = await sharp(imageBuffer).metadata();
+
+  const width = metadata.width;
+  const height = metadata.height;
+
+  if (!width || !height) {
+    throw new Error("Could not determine topo dimensions.");
+  }
+
+  const safeEmail = escapeSvgText(email);
+
+  const fontSize = Math.max(
+    12,
+    Math.min(24, Math.round(width / 55))
+  );
+
+  const tileWidth = Math.max(
+    220,
+    Math.round(fontSize * 12)
+  );
+
+  const tileHeight = Math.max(
+    120,
+    Math.round(fontSize * 6)
+  );
+
+  const watermarkTile = Buffer.from(`
+    <svg
+      width="${tileWidth}"
+      height="${tileHeight}"
+      viewBox="0 0 ${tileWidth} ${tileHeight}"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <text
+        x="${tileWidth / 2}"
+        y="${tileHeight / 2}"
+        transform="rotate(-28 ${tileWidth / 2} ${tileHeight / 2})"
+        text-anchor="middle"
+        dominant-baseline="middle"
+        font-family="Arial, Helvetica, sans-serif"
+        font-size="${fontSize}"
+        font-weight="600"
+        fill="#ffffff"
+        fill-opacity="0.24"
+        stroke="#000000"
+        stroke-opacity="0.18"
+        stroke-width="0.8"
+        paint-order="stroke"
+      >
+        ${safeEmail}
+      </text>
+    </svg>
+  `);
+
+  const pipeline = sharp(imageBuffer).composite([
+    {
+      input: watermarkTile,
+      tile: true,
+      blend: "over",
+    },
+  ]);
+
+  switch (metadata.format) {
+    case "jpeg":
+      return pipeline
+        .jpeg({
+          quality: 92,
+          mozjpeg: true,
+        })
+        .toBuffer();
+
+    case "png":
+      return pipeline
+        .png({
+          compressionLevel: 6,
+          adaptiveFiltering: true,
+        })
+        .toBuffer();
+
+    case "webp":
+      return pipeline
+        .webp({
+          quality: 92,
+        })
+        .toBuffer();
+
+    default:
+      return pipeline
+        .png({
+          compressionLevel: 6,
+          adaptiveFiltering: true,
+        })
+        .toBuffer();
+  }
 }
 
 function escapeSvgText(value) {
