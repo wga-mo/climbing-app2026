@@ -48,6 +48,12 @@ export default function SectorTopo({ sector, sectorId = null }) {
 
           const imageBlob = await response.blob();
 
+          console.log("Topo response:", {
+  url,
+  type: imageBlob.type,
+  size: imageBlob.size,
+});
+
           if (!imageBlob.type.startsWith("image/")) {
             throw new Error("The server did not return a valid image.");
           }
@@ -156,6 +162,7 @@ export default function SectorTopo({ sector, sectorId = null }) {
       </div>
     );
   }
+
 
   return (
     <>
