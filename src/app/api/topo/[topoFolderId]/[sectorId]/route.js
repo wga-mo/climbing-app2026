@@ -231,13 +231,13 @@ console.log("Generated output:", {
     ? "jpg"
     : outputMetadata.format;
 
-const { error: uploadError } = await adminClient.storage
+await adminClient.storage
   .from("topos")
   .upload(
-    `debug/vercel-output.${debugExtension}`,
+    "debug/vercel-output.jpg",
     watermarkedImage,
     {
-      contentType: getContentType(outputMetadata.format),
+      contentType: "image/jpeg",
       upsert: true,
     }
   );
@@ -251,6 +251,7 @@ console.log("Debug upload:", uploadError);
     } catch (err) {
       console.error("Sharp cannot read generated image:", err);
     }
+    
 
     return new Response(watermarkedImage, {
       status: 200,
@@ -263,6 +264,8 @@ console.log("Debug upload:", uploadError);
         Vary: "Authorization",
       },
     });
+
+    
     
   } catch (error) {
     console.error("Unexpected topo API error:", error);
@@ -274,64 +277,13 @@ console.log("Debug upload:", uploadError);
   }
 }
 
-async function addWatermark(imageBuffer, email) {
-  const metadata = await sharp(imageBuffer).metadata();
-
-  const width = metadata.width;
-  const height = metadata.height;
-
-  if (!width || !height) {
-    throw new Error("Could not determine topo dimensions.");
-  }
-
-  const safeEmail = escapeSvgText(email);
-
-  const fontSize = Math.max(
-    12,
-    Math.min(24, Math.round(width / 55))
-  );
-
-  const tileWidth = Math.max(
-    220,
-    Math.round(fontSize * 12)
-  );
-
-  const tileHeight = Math.max(
-    120,
-    Math.round(fontSize * 6)
-  );
-
-  const watermarkTile = Buffer.from(`
-<svg xmlns="http://www.w3.org/2000/svg"
-     width="200"
-     height="100">
-  <rect
-    x="0"
-    y="0"
-    width="200"
-    height="100"
-    fill="red"
-    fill-opacity="0.2"/>
-</svg>
-`);
-
-  const pipeline = sharp(imageBuffer).composite([
-  {
-    input: watermarkTile,
-    tile: true,
-    blend: "over",
-  },
-]);
-
-return pipeline
-  .flatten({ background: "#ffffff" })
-  .jpeg({
-    quality: 92,
-    mozjpeg: true,
-  })
-  .toBuffer();
-
-  
+async function addWatermark(imageBuffer) {
+  return sharp(imageBuffer)
+    .jpeg({
+      quality: 92,
+      mozjpeg: true,
+    })
+    .toBuffer();
 }
 
 function escapeSvgText(value) {
