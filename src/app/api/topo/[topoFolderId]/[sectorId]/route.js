@@ -16,7 +16,7 @@ export async function GET(request, { params }) {
       platform: process.platform,
       arch: process.arch,
     });
-    
+
     const { topoFolderId, sectorId } = await params;
 
     const parsedTopoFolderId = Number(topoFolderId);
@@ -223,11 +223,7 @@ export async function GET(request, { params }) {
 
 console.log(metadata);
 
-return new Response(originalImage, {
-  headers: {
-    "Content-Type": "image/png",
-  },
-});
+
 
     const watermarkedImage = await addWatermark(
       originalImage,
@@ -271,17 +267,11 @@ console.log("Debug upload:", uploadError);
     }
     
 
-    return new Response(watermarkedImage, {
-      status: 200,
-      headers: {
-        "Content-Type": "image/jpeg",
-        "Content-Length": String(watermarkedImage.length),
-        "Content-Disposition": "inline",
-        "Cache-Control": "private, no-store",
-        "X-Content-Type-Options": "nosniff",
-        Vary: "Authorization",
-      },
-    });
+    return new Response(originalImage, {
+  headers: {
+    "Content-Type": "image/png",
+  },
+});
 
     
     
