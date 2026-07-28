@@ -1,6 +1,7 @@
 export default function TickModal({
   selectedRoute,
   selectedRouteTicks,
+  previousBelayers,
   tickDate,
   setTickDate,
   tickType,
@@ -16,14 +17,6 @@ export default function TickModal({
   onSubmit,
 }) {
   if (!selectedRoute) return null;
-
-  const previousBelayers = [
-    ...new Set(
-      selectedRouteTicks
-        .map(tick => tick.belayer)
-        .filter(Boolean)
-    ),
-  ];
 
   const ticksByDate = selectedRouteTicks.reduce((groups, tick) => {
     if (!groups[tick.tick_date]) {

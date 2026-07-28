@@ -115,6 +115,16 @@ export default function SectorRouteTables({ sectors, routes, sectorId = null }) 
     )
   : [];
 
+  const previousBelayers = [
+    ...new Set(
+      ticks
+        .map(tick => tick.belayer?.trim())
+        .filter(Boolean)
+    ),
+  ].sort((a, b) => a.localeCompare(b, "no"));
+
+  console.log("Previous belayers:", previousBelayers);
+
   function startEditTick(tick) {
     setEditingTickId(tick.tick_id);
     setTickDate(tick.tick_date);
@@ -343,6 +353,7 @@ export default function SectorRouteTables({ sectors, routes, sectorId = null }) 
       <TickModal
         selectedRoute={selectedRoute}
         selectedRouteTicks={selectedRouteTicks}
+        previousBelayers={previousBelayers}
         tickDate={tickDate}
         setTickDate={setTickDate}
         tickType={tickType}
