@@ -12,18 +12,7 @@ import { trackEvent } from "@/utils/analytics/trackEvent";
 // - crag/page.js
 // - crag/xxx/sector/page.js
 export default function CragDetailsClient({ cragId, sectorId = null }) {
-  const [crag, setCrag] = useState(null);
-  useEffect(() => {
-    if (!crag?.crag_id) {
-      return;
-    }
-
-    trackEvent("crag_view", {
-      cragId: crag.crag_id,
-    });
-  }, [crag?.crag_id]);
-
-  
+  const [crag, setCrag] = useState(null);  
   const [sectors, setSectors] = useState([]);
   const [allSectors, setAllSectors] = useState([]);
   const [routes, setRoutes] = useState([]);
@@ -41,6 +30,19 @@ export default function CragDetailsClient({ cragId, sectorId = null }) {
   const userId = user?.id ?? null;
 
   const sources = getDatabaseSources(Boolean(userId));
+
+  useEffect(() => {
+    if (sectorId) {
+      trackEvent("sector_view", {
+        cragId,
+        sectorId,
+      });
+    } else {
+      trackEvent("crag_view", {
+        cragId,
+      });
+    }
+  }, [cragId, sectorId]);
 
   useEffect(() => {
     if (authLoading) return;

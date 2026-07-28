@@ -7,7 +7,7 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
 const ALLOWED_EVENTS = new Set([
-"home_view",
+  "home_view",
   "crag_view",
   "sector_view",
   "route_view",
@@ -37,29 +37,26 @@ function validNullableId(value) {
 }
 
 function cleanInteger(value) {
-  if (value === null || value === undefined || value === "") {
+  if (
+    value === null ||
+    value === undefined ||
+    value === ""
+  ) {
     return null;
   }
 
   const parsed = Number(value);
 
-  return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
-}
-
-function cleanUuid(value) {
-  return typeof value === "string" && UUID_PATTERN.test(value)
-    ? value
+  return Number.isInteger(parsed) && parsed > 0
+    ? parsed
     : null;
 }
 
-function cleanPagePath(value) {
-  if (typeof value !== "string") {
-    return null;
-  }
-
-  const path = value.slice(0, 500);
-
-  return path.startsWith("/") ? path : null;
+function cleanUuid(value) {
+  return typeof value === "string" &&
+    UUID_PATTERN.test(value)
+    ? value
+    : null;
 }
 
 function cleanHostname(value) {
@@ -67,7 +64,10 @@ function cleanHostname(value) {
     return null;
   }
 
-  const hostname = value.trim().toLowerCase().slice(0, 255);
+  const hostname = value
+    .trim()
+    .toLowerCase()
+    .slice(0, 255);
 
   if (
     !hostname ||
@@ -81,6 +81,16 @@ function cleanHostname(value) {
   return hostname;
 }
 
+function cleanPagePath(value) {
+  if (typeof value !== "string") {
+    return null;
+  }
+
+  const path = value.slice(0, 500);
+
+  return path.startsWith("/") ? path : null;
+}
+
 function cleanProperties(value) {
   if (
     !value ||
@@ -92,7 +102,6 @@ function cleanProperties(value) {
 
   const serialized = JSON.stringify(value);
 
-  // Prevent excessively large analytics requests.
   if (serialized.length > 10_000) {
     return {};
   }
@@ -100,21 +109,119 @@ function cleanProperties(value) {
   return value;
 }
 
+async function getAuthenticatedUserId(request) {
+  const authorization =
+    request.headers.get("authorization");
+
+  if (!authorization?.startsWith("Bearer ")) {
+    return null;
+  }
+
+  const accessToken = authorization
+    .slice("Bearer ".length)
+    .trim();
+
+  if (!accessToken) {
+    return null;
+  }
+
+  const authClient = createClient(
+    supabaseUrl,
+    supabaseAnonKey,
+    {
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false,
+        detectSessionInUrl: false,
+      },
+    }
+  );
+
+  const {
+    data: { user },
+    error,
+  } = await authClient.auth.getUser(accessToken);
+
+  if (error) {
+    if (process.env.NODE_ENV === "development") {
+      console.warn(
+        "Analytics authentication failed:",
+        error
+      );
+    }
+
+    return null;
+  }
+
+  return user?.id ?? null;
+}
+
+async function getIsAdmin(userId) {
+  if (!userId) {
+    return false;
+  }
+
+  const { data: profile, error } =
+    await supabaseAdmin
+      .from("profiles")
+      .select("is_admin")
+      .eq("id", userId)
+      .maybeSingle();
+
+  if (error) {
+    console.error(
+      "Analytics profile lookup failed:",
+      error
+    );
+
+    return false;
+  }
+
+  return profile?.is_admin === true;
+}
+
+function createDedupeKey({
+  eventName,
+  hostname,
+  cragId,
+  sectorId,
+  routeId,
+  userId,
+  anonymousId,
+}) {
+  const thirtyMinuteBucket = Math.floor(
+    Date.now() / (30 * 60 * 1000)
+  );
+
+  const visitorKey = userId
+    ? `user:${userId}`
+    : `anonymous:${anonymousId}`;
+
+  return [
+    eventName,
+    hostname ?? "",
+    cragId ?? "",
+    sectorId ?? "",
+    routeId ?? "",
+    visitorKey,
+    thirtyMinuteBucket,
+  ].join("|");
+}
+
 export async function POST(request) {
   try {
     if (!supabaseUrl || !supabaseAnonKey) {
-        console.error(
-            "Missing Supabase environment variables for analytics."
-        );
+      console.error(
+        "Missing Supabase environment variables for analytics."
+      );
 
-        return NextResponse.json(
-            { error: "Server configuration error" },
-            { status: 500 }
-        );
+      return NextResponse.json(
+        { error: "Server configuration error" },
+        { status: 500 }
+      );
     }
 
     const body = await request.json();
-
     const eventName = body.eventName;
 
     if (
@@ -142,74 +249,27 @@ export async function POST(request) {
     const sectorId = cleanInteger(body.sectorId);
     const routeId = cleanInteger(body.routeId);
 
-    const anonymousId = cleanUuid(body.anonymousId);
+    const anonymousId = cleanUuid(
+      body.anonymousId
+    );
+
     const sessionId = cleanUuid(body.sessionId);
+    const hostname = cleanHostname(body.hostname);
 
-    let userId = null;
-    let isAdmin = false;
-
-    const authorization = request.headers.get("authorization");
-
-    if (authorization?.startsWith("Bearer ")) {
-    const accessToken = authorization
-        .slice("Bearer ".length)
-        .trim();
-
-    if (accessToken) {
-        const authClient = createClient(
-        supabaseUrl,
-        supabaseAnonKey,
-        {
-            auth: {
-            persistSession: false,
-            autoRefreshToken: false,
-            detectSessionInUrl: false,
-            },
-        }
-        );
-
-        const {
-        data: { user },
-        error: userError,
-        } = await authClient.auth.getUser(accessToken);
-
-        if (userError) {
-        if (process.env.NODE_ENV === "development") {
-            console.warn(
-            "Analytics authentication failed:",
-            userError
-            );
-        }
-        } else {
-            userId = user?.id ?? null;
-
-            if (userId) {
-                const { data: profile, error: profileError } =
-                await supabaseAdmin
-                    .from("profiles")
-                    .select("is_admin")
-                    .eq("id", userId)
-                    .maybeSingle();
-
-                if (profileError) {
-                console.error(
-                    "Analytics profile lookup failed:",
-                    profileError
-                );
-                } else {
-                isAdmin = profile?.is_admin === true;
-                }
-            }
-            }
-    }
-    }
+    const userId =
+      await getAuthenticatedUserId(request);
 
     if (!userId && !anonymousId) {
       return NextResponse.json(
-        { error: "Visitor could not be identified" },
+        {
+          error:
+            "Visitor could not be identified",
+        },
         { status: 400 }
       );
     }
+
+    const isAdmin = await getIsAdmin(userId);
 
     const event = {
       event_name: eventName,
@@ -217,99 +277,56 @@ export async function POST(request) {
       is_admin: isAdmin,
       anonymous_id: anonymousId,
       session_id: sessionId,
-
-      hostname: cleanHostname(body.hostname),
+      hostname,
       page_path: cleanPagePath(body.pagePath),
-
       crag_id: cragId,
       sector_id: sectorId,
       route_id: routeId,
-      properties: cleanProperties(body.properties),
+      properties: cleanProperties(
+        body.properties
+      ),
+      dedupe_key: null,
     };
 
-    /*
-     * Avoid counting repeated rendering, React development effects,
-     * refreshes and quick back/forward navigation as new views.
-     */
     if (VIEW_EVENTS.has(eventName)) {
-      const thirtyMinutesAgo = new Date(
-        Date.now() - 30 * 60 * 1000
-      ).toISOString();
+      event.dedupe_key = createDedupeKey({
+        eventName,
+        hostname,
+        cragId,
+        sectorId,
+        routeId,
+        userId,
+        anonymousId,
+      });
+    }
 
-      let duplicateQuery = supabaseAdmin
+    const { error: insertError } =
+      await supabaseAdmin
         .from("analytics_events")
-        .select("event_id")
-        .eq("event_name", eventName)
-        .gte("created_at", thirtyMinutesAgo)
-        .limit(1);
+        .insert(event);
 
-      if (event.hostname === null) {
-        duplicateQuery = duplicateQuery.is("hostname", null);
-      } else {
-        duplicateQuery = duplicateQuery.eq("hostname", event.hostname);
-     }
-
-      if (cragId === null) {
-        duplicateQuery = duplicateQuery.is("crag_id", null);
-      } else {
-        duplicateQuery = duplicateQuery.eq("crag_id", cragId);
-      }
-
-      if (sectorId === null) {
-        duplicateQuery = duplicateQuery.is("sector_id", null);
-      } else {
-        duplicateQuery = duplicateQuery.eq("sector_id", sectorId);
-      }
-
-      if (routeId === null) {
-        duplicateQuery = duplicateQuery.is("route_id", null);
-      } else {
-        duplicateQuery = duplicateQuery.eq("route_id", routeId);
-      }
-
-      if (userId) {
-        duplicateQuery = duplicateQuery.eq("user_id", userId);
-      } else {
-        duplicateQuery = duplicateQuery
-          .is("user_id", null)
-          .eq("anonymous_id", anonymousId);
-      }
-
-      const {
-        data: duplicate,
-        error: duplicateError,
-      } = await duplicateQuery.maybeSingle();
-
-      if (duplicateError) {
-        console.error(
-          "Analytics duplicate check failed:",
-          duplicateError
-        );
-
-        return NextResponse.json(
-          { error: "Could not record analytics event" },
-          { status: 500 }
-        );
-      }
-
-      if (duplicate) {
+    if (insertError) {
+      if (
+        insertError.code === "23505" &&
+        event.dedupe_key
+      ) {
         return NextResponse.json({
           success: true,
           recorded: false,
           reason: "duplicate",
         });
       }
-    }
 
-    const { error: insertError } = await supabaseAdmin
-      .from("analytics_events")
-      .insert(event);
-
-    if (insertError) {
-      console.error("Analytics insert failed:", insertError);
+      console.error(
+        "Analytics insert failed:",
+        insertError
+      );
 
       return NextResponse.json(
-        { error: "Could not record analytics event" },
+        {
+          error:
+            "Could not record analytics event",
+        },
         { status: 500 }
       );
     }
@@ -319,7 +336,10 @@ export async function POST(request) {
       recorded: true,
     });
   } catch (error) {
-    console.error("Analytics API error:", error);
+    console.error(
+      "Analytics API error:",
+      error
+    );
 
     return NextResponse.json(
       { error: "Invalid analytics request" },
