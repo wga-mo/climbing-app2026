@@ -211,9 +211,10 @@ export async function GET(request, { params }) {
       await topoBlob.arrayBuffer()
     );
 
-    const watermarkedImage = originalImage;
-
-    
+    const watermarkedImage = await addWatermark(
+      originalImage,
+      user.email ?? "private"
+    );
 
     return new Response(watermarkedImage, {
       status: 200,
@@ -236,8 +237,7 @@ export async function GET(request, { params }) {
 }
 
 async function addWatermark(imageBuffer, email) {
-  const image = sharp(imageBuffer);
-  const metadata = await image.metadata();
+  const metadata = await sharp(imageBuffer).metadata();
 
   const width = metadata.width;
   const height = metadata.height;
@@ -248,82 +248,54 @@ async function addWatermark(imageBuffer, email) {
 
   const safeEmail = escapeSvgText(email);
 
-  /*
-   * Scale the watermark according to the image size.
-   * This keeps it readable on both small and large topo files.
-   */
   const fontSize = Math.max(
     12,
     Math.min(24, Math.round(width / 55))
   );
 
-  const horizontalSpacing = Math.max(
-    170,
-    Math.round(fontSize * 10)
+  const tileWidth = Math.max(
+    220,
+    Math.round(fontSize * 12)
   );
 
-  const verticalSpacing = Math.max(
-    95,
-    Math.round(fontSize * 4.5)
+  const tileHeight = Math.max(
+    120,
+    Math.round(fontSize * 6)
   );
 
-  const rows = [];
-
-  /*
-   * Start outside the visible image because rotating the text
-   * shifts its visible position.
-   */
-  for (
-    let y = -height;
-    y < height * 2;
-    y += verticalSpacing
-  ) {
-    const offset =
-      Math.floor(y / verticalSpacing) % 2 === 0
-        ? 0
-        : horizontalSpacing / 2;
-
-    for (
-      let x = -width - offset;
-      x < width * 2;
-      x += horizontalSpacing
-    ) {
-      rows.push(`
-        <text
-          x="${x}"
-          y="${y}"
-          transform="rotate(-28 ${x} ${y})"
-          text-anchor="middle"
-          font-family="Arial, Helvetica, sans-serif"
-          font-size="${fontSize}"
-          font-weight="600"
-          fill="rgba(255,255,255,0.24)"
-          stroke="rgba(0,0,0,0.18)"
-          stroke-width="0.8"
-          paint-order="stroke"
-        >
-          ${safeEmail}
-        </text>
-      `);
-    }
-  }
-
-  const watermarkSvg = Buffer.from(`
+  const watermarkTile = Buffer.from(`
     <svg
-      width="${width}"
-      height="${height}"
-      viewBox="0 0 ${width} ${height}"
+      width="${tileWidth}"
+      height="${tileHeight}"
+      viewBox="0 0 ${tileWidth} ${tileHeight}"
       xmlns="http://www.w3.org/2000/svg"
     >
-      ${rows.join("")}
+      <text
+        x="${tileWidth / 2}"
+        y="${tileHeight / 2}"
+        transform="rotate(-28 ${tileWidth / 2} ${tileHeight / 2})"
+        text-anchor="middle"
+        dominant-baseline="middle"
+        font-family="Arial, Helvetica, sans-serif"
+        font-size="${fontSize}"
+        font-weight="600"
+        fill="#ffffff"
+        fill-opacity="0.24"
+        stroke="#000000"
+        stroke-opacity="0.18"
+        stroke-width="0.8"
+        paint-order="stroke"
+      >
+        ${safeEmail}
+      </text>
     </svg>
   `);
 
-  const pipeline = image.composite([
+  const pipeline = sharp(imageBuffer).composite([
     {
-      input: watermarkSvg,
-      top: 0,
-      left: 0,
+      input: watermarkTile,
+      tile: true,
+      blend: "over",
     },
   ]);
 
@@ -331,7 +303,7 @@ async function addWatermark(imageBuffer, email) {
     case "jpeg":
       return pipeline
         .jpeg({
-          quality: 92,
+          quality: 90,
           mozjpeg: true,
         })
         .toBuffer();
@@ -339,23 +311,25 @@ async function addWatermark(imageBuffer, email) {
     case "png":
       return pipeline
         .png({
-          compressionLevel: 6,
+          compressionLevel: 9,
+          adaptiveFiltering: true,
         })
         .toBuffer();
 
     case "webp":
       return pipeline
         .webp({
-          quality: 92,
+          quality: 90,
         })
         .toBuffer();
 
     default:
-      /*
-       * GIF input would lose animation when processed by Sharp.
-       * Topos are normally static, so PNG is a safe fallback.
-       */
-      return pipeline.png().toBuffer();
+      return pipeline
+        .png({
+          compressionLevel: 9,
+          adaptiveFiltering: true,
+        })
+        .toBuffer();
   }
 }
 
