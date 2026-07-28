@@ -10,6 +10,13 @@ const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 export async function GET(request, { params }) {
   try {
+    console.log("Runtime versions:", {
+      node: process.version,
+      sharp: sharp.versions,
+      platform: process.platform,
+      arch: process.arch,
+    });
+    
     const { topoFolderId, sectorId } = await params;
 
     const parsedTopoFolderId = Number(topoFolderId);
@@ -207,9 +214,20 @@ export async function GET(request, { params }) {
       );
     }
 
+    
     const originalImage = Buffer.from(
       await topoBlob.arrayBuffer()
     );
+
+    const metadata = await sharp(originalImage).metadata();
+
+console.log(metadata);
+
+return new Response(originalImage, {
+  headers: {
+    "Content-Type": "image/png",
+  },
+});
 
     const watermarkedImage = await addWatermark(
       originalImage,
