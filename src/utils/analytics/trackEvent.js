@@ -18,6 +18,8 @@ export async function trackEvent(eventName, data = {}) {
       eventName,
       anonymousId: getAnonymousId(),
       sessionId: getAnalyticsSessionId(),
+
+      hostname: window.location.host,
       pagePath: window.location.pathname,
 
       cragId: data.cragId ?? null,

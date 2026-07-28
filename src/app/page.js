@@ -2,9 +2,10 @@
 
 import { useFilters } from "@/context/FiltersContext";
 import { useCrags } from "@/hooks/useCrags";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import FiltersSidebar from "@/components/FiltersSidebar";
 import MainTable from "@/components/MainTable";
+import { trackEvent } from "@/utils/analytics/trackEvent";
 
 import dynamic from "next/dynamic";
 
@@ -13,6 +14,10 @@ const MapView = dynamic(() => import("@/components/MapView"), {
 });
 
 export default function HomePage() {
+  useEffect(() => {
+    trackEvent("home_view");
+  }, []);
+
   const { filters, setFilters, activeMobileView, setActiveMobileView, mobileFiltersVisible, } = useFilters();
   const { crags, loading } = useCrags(filters);
   const [activeCragId, setActiveCragId] = useState(null);

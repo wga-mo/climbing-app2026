@@ -7,6 +7,7 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
 const ALLOWED_EVENTS = new Set([
+"home_view",
   "crag_view",
   "sector_view",
   "route_view",
@@ -18,6 +19,7 @@ const ALLOWED_EVENTS = new Set([
 ]);
 
 const VIEW_EVENTS = new Set([
+  "home_view",
   "crag_view",
   "sector_view",
   "route_view",
@@ -58,6 +60,25 @@ function cleanPagePath(value) {
   const path = value.slice(0, 500);
 
   return path.startsWith("/") ? path : null;
+}
+
+function cleanHostname(value) {
+  if (typeof value !== "string") {
+    return null;
+  }
+
+  const hostname = value.trim().toLowerCase().slice(0, 255);
+
+  if (
+    !hostname ||
+    hostname.includes("/") ||
+    hostname.includes("\\") ||
+    /\s/.test(hostname)
+  ) {
+    return null;
+  }
+
+  return hostname;
 }
 
 function cleanProperties(value) {
@@ -196,7 +217,10 @@ export async function POST(request) {
       is_admin: isAdmin,
       anonymous_id: anonymousId,
       session_id: sessionId,
+
+      hostname: cleanHostname(body.hostname),
       page_path: cleanPagePath(body.pagePath),
+
       crag_id: cragId,
       sector_id: sectorId,
       route_id: routeId,
@@ -218,6 +242,12 @@ export async function POST(request) {
         .eq("event_name", eventName)
         .gte("created_at", thirtyMinutesAgo)
         .limit(1);
+
+      if (event.hostname === null) {
+        duplicateQuery = duplicateQuery.is("hostname", null);
+      } else {
+        duplicateQuery = duplicateQuery.eq("hostname", event.hostname);
+     }
 
       if (cragId === null) {
         duplicateQuery = duplicateQuery.is("crag_id", null);
