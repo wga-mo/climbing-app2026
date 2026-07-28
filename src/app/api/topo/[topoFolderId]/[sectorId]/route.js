@@ -216,16 +216,24 @@ export async function GET(request, { params }) {
       user.email ?? "private"
     );
 
+    console.log({
+      storagePath,
+      original: originalImage.length,
+      output: watermarkedImage.length,
+    });
+
     return new Response(watermarkedImage, {
       status: 200,
       headers: {
-        "Content-Type": getContentType(extension),
+        "Content-Type": "image/jpeg",
+        "Content-Length": String(watermarkedImage.length),
         "Content-Disposition": "inline",
-        "Cache-Control": "private, max-age=3600",
+        "Cache-Control": "private, no-store",
         "X-Content-Type-Options": "nosniff",
         Vary: "Authorization",
       },
     });
+    
   } catch (error) {
     console.error("Unexpected topo API error:", error);
 
@@ -292,45 +300,22 @@ async function addWatermark(imageBuffer, email) {
   `);
 
   const pipeline = sharp(imageBuffer).composite([
-    {
-      input: watermarkTile,
-      tile: true,
-      blend: "over",
-    },
-  ]);
+  {
+    input: watermarkTile,
+    tile: true,
+    blend: "over",
+  },
+]);
 
-  switch (metadata.format) {
-    case "jpeg":
-      return pipeline
-        .jpeg({
-          quality: 90,
-          mozjpeg: true,
-        })
-        .toBuffer();
+return pipeline
+  .flatten({ background: "#ffffff" })
+  .jpeg({
+    quality: 92,
+    mozjpeg: true,
+  })
+  .toBuffer();
 
-    case "png":
-      return pipeline
-        .png({
-          compressionLevel: 9,
-          adaptiveFiltering: true,
-        })
-        .toBuffer();
-
-    case "webp":
-      return pipeline
-        .webp({
-          quality: 90,
-        })
-        .toBuffer();
-
-    default:
-      return pipeline
-        .png({
-          compressionLevel: 9,
-          adaptiveFiltering: true,
-        })
-        .toBuffer();
-  }
+  
 }
 
 function escapeSvgText(value) {
