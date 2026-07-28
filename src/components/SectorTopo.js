@@ -108,6 +108,8 @@ export default function SectorTopo({ sector, sectorId = null }) {
 
         objectUrl = URL.createObjectURL(imageBlob);
 
+        window.open(objectUrl, "_blank");
+
         if (!cancelled) {
           setImageUrl(objectUrl);
         }

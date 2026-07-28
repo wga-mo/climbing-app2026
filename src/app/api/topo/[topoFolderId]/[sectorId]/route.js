@@ -211,10 +211,9 @@ export async function GET(request, { params }) {
       await topoBlob.arrayBuffer()
     );
 
-    const watermarkedImage = await addWatermark(
-      originalImage,
-      user.email ?? "private"
-    );
+    const watermarkedImage = originalImage;
+
+    
 
     return new Response(watermarkedImage, {
       status: 200,
