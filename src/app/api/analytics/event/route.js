@@ -156,15 +156,18 @@ async function getAuthenticatedUserId(request) {
   return user?.id ?? null;
 }
 
-async function getIsAdmin(userId) {
+async function getProfileData(userId) {
   if (!userId) {
-    return false;
+    return {
+      isAdmin: false,
+      username: null,
+    };
   }
 
   const { data: profile, error } =
     await supabaseAdmin
       .from("profiles")
-      .select("is_admin")
+      .select("is_admin, username")
       .eq("id", userId)
       .maybeSingle();
 
@@ -174,10 +177,22 @@ async function getIsAdmin(userId) {
       error
     );
 
-    return false;
+    return {
+      isAdmin: false,
+      username: null,
+    };
   }
 
-  return profile?.is_admin === true;
+  const username =
+    typeof profile?.username === "string" &&
+    profile.username.trim()
+      ? profile.username.trim().slice(0, 255)
+      : null;
+
+  return {
+    isAdmin: profile?.is_admin === true,
+    username,
+  };
 }
 
 function createDedupeKey({
@@ -269,12 +284,13 @@ export async function POST(request) {
       );
     }
 
-    const isAdmin = await getIsAdmin(userId);
+    const { isAdmin, username } = await getProfileData(userId);
 
     const event = {
       event_name: eventName,
       user_id: userId,
       is_admin: isAdmin,
+      username,
       anonymous_id: anonymousId,
       session_id: sessionId,
       hostname,
