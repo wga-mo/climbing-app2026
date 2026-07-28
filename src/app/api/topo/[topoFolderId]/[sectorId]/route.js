@@ -216,13 +216,28 @@ export async function GET(request, { params }) {
       user.email ?? "private"
     );
 
-   const { error: uploadError } = await adminClient.storage
+    const outputMetadata = await sharp(watermarkedImage).metadata();
+
+console.log("Generated output:", {
+  format: outputMetadata.format,
+  width: outputMetadata.width,
+  height: outputMetadata.height,
+  bytes: watermarkedImage.length,
+  signature: watermarkedImage.subarray(0, 12).toString("hex"),
+});
+
+   const debugExtension =
+  outputMetadata.format === "jpeg"
+    ? "jpg"
+    : outputMetadata.format;
+
+const { error: uploadError } = await adminClient.storage
   .from("topos")
   .upload(
-    "debug/vercel-output.png",
+    `debug/vercel-output.${debugExtension}`,
     watermarkedImage,
     {
-      contentType: "image/png",
+      contentType: getContentType(outputMetadata.format),
       upsert: true,
     }
   );
@@ -342,7 +357,7 @@ function escapeSvgText(value) {
     .replaceAll("'", "&apos;");
 }
 
-function getContentType(extension) {
+function getContentType(format) {
   const contentTypes = {
     jpg: "image/jpeg",
     jpeg: "image/jpeg",
@@ -351,5 +366,5 @@ function getContentType(extension) {
     gif: "image/gif",
   };
 
-  return contentTypes[extension] ?? "application/octet-stream";
+  return contentTypes[format] ?? "application/octet-stream";
 }
