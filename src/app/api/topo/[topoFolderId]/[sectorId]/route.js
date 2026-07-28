@@ -216,11 +216,26 @@ export async function GET(request, { params }) {
       user.email ?? "private"
     );
 
-    console.log({
-      storagePath,
-      original: originalImage.length,
-      output: watermarkedImage.length,
-    });
+   const { error: uploadError } = await adminClient.storage
+  .from("topos")
+  .upload(
+    "debug/vercel-output.png",
+    watermarkedImage,
+    {
+      contentType: "image/png",
+      upsert: true,
+    }
+  );
+
+console.log("Debug upload:", uploadError);
+
+    try {
+      const metadata = await sharp(watermarkedImage).metadata();
+
+      console.log("Generated image metadata:", metadata);
+    } catch (err) {
+      console.error("Sharp cannot read generated image:", err);
+    }
 
     return new Response(watermarkedImage, {
       status: 200,
