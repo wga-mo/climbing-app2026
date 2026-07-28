@@ -297,7 +297,7 @@ export default function SectorRouteTables({ sectors, routes, sectorId = null }) 
         </td>
 
         <td className="py-3 text-xs">
-          {starsToText(route.stars_int)}
+          {starsToText(route.stars)}
         </td>
 
         <td className="py-3">

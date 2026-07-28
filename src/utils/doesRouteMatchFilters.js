@@ -27,9 +27,13 @@ export function doesRouteMatchFilters(route, filters) {
       route.grade_int === 0
     );
 
+  const starsMatch =
+    (route.stars ?? 0) >= (filters.starsMin ?? 0);
+
   return (
     styleMatch &&
     pitchMatch &&
-    gradeMatch
+    gradeMatch &&
+    starsMatch
   );
 }

@@ -235,6 +235,42 @@ export default function FiltersSidebar({ filters, setFilters, mobile = false, mo
           </label>
         </section>
 
+        {/* Stars filter */}
+        <section className="mt-3 border-b pb-3 ">
+          <h3 className="text-xl font-semibold">Minimum stars</h3>
+
+          <div className="mt-2 flex flex-wrap gap-2">
+            {[
+              { value: 0, label: "Any" },
+              { value: 1, label: "★+" },
+              { value: 2, label: "★★+" },
+              { value: 3, label: "★★★" },
+            ].map((option) => {
+              const active = filters.starsMin === option.value;
+
+              return (
+                <button
+                  key={option.value}
+                  type="button"
+                  onClick={() =>
+                    setFilters((current) => ({
+                      ...current,
+                      starsMin: option.value,
+                    }))
+                  }
+                  className={`rounded-full border px-3 py-1.5 text-sm transition ${
+                    active
+                      ? "border-blue-600 bg-blue-600 text-white"
+                      : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+                  }`}
+                >
+                  {option.label}
+                </button>
+              );
+            })}
+          </div>
+        </section>
+
         {/* Pitches filter */}
         <section className="mt-3 border-b pb-3 ">
           <h3 className="text-xl font-semibold">Pitches</h3>

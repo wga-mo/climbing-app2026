@@ -153,7 +153,7 @@ export default function CragDetailsClient({ cragId, sectorId = null }) {
           route_id,
           name,
           grade_int,
-          stars_int,
+          stars,
           length,
           bolts,
           style,

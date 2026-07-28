@@ -44,6 +44,7 @@ export function useCrags(filters) {
 
           grade_min: filters.globalFilter ? filters.gradeMin : 0,
           grade_max: filters.globalFilter ? filters.gradeMax : 1000,
+          stars_min: filters.globalFilter ? filters.starsMin : 0,
 
           p_s: filters.globalFilter ? filters.p_s : true,
           p_m: filters.globalFilter ? filters.p_m : true,

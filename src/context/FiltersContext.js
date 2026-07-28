@@ -23,6 +23,7 @@ export const defaultFilters = {
   sortDirection: "desc",
   searchText: "",
   showProjects: false,
+  starsMin: 0,
 };
 
 export function FiltersProvider({ children }) {
