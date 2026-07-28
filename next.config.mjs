@@ -1,6 +1,10 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  /* config options here */
+  outputFileTracingIncludes: {
+    "/api/topo/[topoFolderId]/[sectorId]": [
+      "./src/assets/fonts/NotoSans-Regular.ttf",
+    ],
+  },
 };
 
 export default nextConfig;

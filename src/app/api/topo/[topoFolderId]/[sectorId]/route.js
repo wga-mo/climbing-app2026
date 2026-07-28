@@ -1,5 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import sharp from "sharp";
+import path from "path";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -10,13 +11,6 @@ const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 export async function GET(request, { params }) {
   try {
-    console.log("Runtime versions:", {
-      node: process.version,
-      sharp: sharp.versions,
-      platform: process.platform,
-      arch: process.arch,
-    });
-
     const { topoFolderId, sectorId } = await params;
 
     const parsedTopoFolderId = Number(topoFolderId);
@@ -219,51 +213,24 @@ export async function GET(request, { params }) {
       await topoBlob.arrayBuffer()
     );
 
-    const metadata = await sharp(originalImage).metadata();
-
-console.log(metadata);
-
-
-
     const watermarkedImage = await addWatermark(
-  originalImage,
-  user.email ?? "private"
-);
+      originalImage,
+      user.email ?? "private"
+    );
 
-const outputMetadata = await sharp(watermarkedImage).metadata();
+    const outputMetadata = await sharp(watermarkedImage).metadata();
 
-console.log("Generated output:", {
-  format: outputMetadata.format,
-  width: outputMetadata.width,
-  height: outputMetadata.height,
-  bytes: watermarkedImage.length,
-  signature: watermarkedImage.subarray(0, 12).toString("hex"),
-});
-
-const { error: uploadError } = await adminClient.storage
-  .from("topos")
-  .upload(
-    "debug/vercel-output.jpg",
-    watermarkedImage,
-    {
-      contentType: "image/jpeg",
-      upsert: true,
-    }
-  );
-
-console.log("Debug upload:", uploadError);
-
-return new Response(watermarkedImage, {
-  status: 200,
-  headers: {
-    "Content-Type": getContentType(outputMetadata.format),
-    "Content-Length": String(watermarkedImage.length),
-    "Content-Disposition": "inline",
-    "Cache-Control": "private, no-store",
-    "X-Content-Type-Options": "nosniff",
-    Vary: "Authorization",
-  },
-}); 
+    return new Response(watermarkedImage, {
+      status: 200,
+      headers: {
+        "Content-Type": getContentType(outputMetadata.format),
+        "Content-Length": String(watermarkedImage.length),
+        "Content-Disposition": "inline",
+        "Cache-Control": "private, no-store",
+        "X-Content-Type-Options": "nosniff",
+        Vary: "Authorization",
+      },
+    }); 
     
   } catch (error) {
     console.error("Unexpected topo API error:", error);
@@ -273,6 +240,13 @@ return new Response(watermarkedImage, {
       { status: 500 }
     );
   }
+}
+
+function escapePangoText(value) {
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;");
 }
 
 async function addWatermark(imageBuffer, email) {
@@ -285,50 +259,60 @@ async function addWatermark(imageBuffer, email) {
     throw new Error("Could not determine topo dimensions.");
   }
 
-  const safeEmail = escapeSvgText(email);
-
   const fontSize = Math.max(
-    12,
-    Math.min(24, Math.round(width / 55))
+    10,
+    Math.min(16, Math.round(width / 95))
   );
 
   const tileWidth = Math.max(
+    360,
+    Math.round(fontSize * 22)
+  );
+
+  const tileHeight = Math.max(
     220,
     Math.round(fontSize * 12)
   );
 
-  const tileHeight = Math.max(
-    120,
-    Math.round(fontSize * 6)
+  const fontPath = path.join(
+    process.cwd(),
+    "src",
+    "assets",
+    "fonts",
+    "NotoSans-Regular.ttf"
   );
 
-  const watermarkTile = Buffer.from(`
-    <svg
-      width="${tileWidth}"
-      height="${tileHeight}"
-      viewBox="0 0 ${tileWidth} ${tileHeight}"
-      xmlns="http://www.w3.org/2000/svg"
-    >
-      <text
-        x="${tileWidth / 2}"
-        y="${tileHeight / 2}"
-        transform="rotate(-28 ${tileWidth / 2} ${tileHeight / 2})"
-        text-anchor="middle"
-        dominant-baseline="middle"
-        font-family="DejaVu Sans"
-        font-size="${fontSize}"
-        font-weight="600"
-        fill="#ffffff"
-        fill-opacity="0.24"
-        stroke="#000000"
-        stroke-opacity="0.18"
-        stroke-width="0.8"
-        paint-order="stroke"
-      >
-        ${safeEmail}
-      </text>
-    </svg>
-  `);
+  const safeEmail = escapePangoText(email || "private");
+
+  const watermarkTile = await sharp({
+    text: {
+      text: `
+        <span
+          foreground="#ffffff"
+          alpha="14%"
+          font_weight="500"
+        >
+          ${safeEmail}
+        </span>
+      `,
+      font: `Noto Sans ${fontSize}`,
+      fontfile: fontPath,
+      width: tileWidth,
+      height: tileHeight,
+      align: "center",
+      rgba: true,
+    },
+  })
+    .rotate(-28, {
+      background: {
+        r: 0,
+        g: 0,
+        b: 0,
+        alpha: 0,
+      },
+    })
+    .png()
+    .toBuffer();
 
   const pipeline = sharp(imageBuffer).composite([
     {
@@ -370,15 +354,6 @@ async function addWatermark(imageBuffer, email) {
         })
         .toBuffer();
   }
-}
-
-function escapeSvgText(value) {
-  return String(value)
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&apos;");
 }
 
 function getContentType(format) {
