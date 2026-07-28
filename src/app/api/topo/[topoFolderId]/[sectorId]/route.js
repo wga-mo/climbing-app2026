@@ -226,11 +226,11 @@ console.log(metadata);
 
 
     const watermarkedImage = await addWatermark(
-      originalImage,
-      user.email ?? "private"
-    );
+  originalImage,
+  user.email ?? "private"
+);
 
-    const outputMetadata = await sharp(watermarkedImage).metadata();
+const outputMetadata = await sharp(watermarkedImage).metadata();
 
 console.log("Generated output:", {
   format: outputMetadata.format,
@@ -240,12 +240,7 @@ console.log("Generated output:", {
   signature: watermarkedImage.subarray(0, 12).toString("hex"),
 });
 
-   const debugExtension =
-  outputMetadata.format === "jpeg"
-    ? "jpg"
-    : outputMetadata.format;
-
-await adminClient.storage
+const { error: uploadError } = await adminClient.storage
   .from("topos")
   .upload(
     "debug/vercel-output.jpg",
@@ -258,22 +253,17 @@ await adminClient.storage
 
 console.log("Debug upload:", uploadError);
 
-    try {
-      const metadata = await sharp(watermarkedImage).metadata();
-
-      console.log("Generated image metadata:", metadata);
-    } catch (err) {
-      console.error("Sharp cannot read generated image:", err);
-    }
-    
-
-    return new Response(originalImage, {
+return new Response(watermarkedImage, {
+  status: 200,
   headers: {
-    "Content-Type": "image/png",
+    "Content-Type": "image/jpeg",
+    "Content-Length": String(watermarkedImage.length),
+    "Content-Disposition": "inline",
+    "Cache-Control": "private, no-store",
+    "X-Content-Type-Options": "nosniff",
+    Vary: "Authorization",
   },
-});
-
-    
+});    
     
   } catch (error) {
     console.error("Unexpected topo API error:", error);
