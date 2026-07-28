@@ -302,32 +302,18 @@ async function addWatermark(imageBuffer, email) {
   );
 
   const watermarkTile = Buffer.from(`
-    <svg
-      width="${tileWidth}"
-      height="${tileHeight}"
-      viewBox="0 0 ${tileWidth} ${tileHeight}"
-      xmlns="http://www.w3.org/2000/svg"
-    >
-      <text
-        x="${tileWidth / 2}"
-        y="${tileHeight / 2}"
-        transform="rotate(-28 ${tileWidth / 2} ${tileHeight / 2})"
-        text-anchor="middle"
-        dominant-baseline="middle"
-        font-family="Arial, Helvetica, sans-serif"
-        font-size="${fontSize}"
-        font-weight="600"
-        fill="#ffffff"
-        fill-opacity="0.24"
-        stroke="#000000"
-        stroke-opacity="0.18"
-        stroke-width="0.8"
-        paint-order="stroke"
-      >
-        ${safeEmail}
-      </text>
-    </svg>
-  `);
+<svg xmlns="http://www.w3.org/2000/svg"
+     width="200"
+     height="100">
+  <rect
+    x="0"
+    y="0"
+    width="200"
+    height="100"
+    fill="red"
+    fill-opacity="0.2"/>
+</svg>
+`);
 
   const pipeline = sharp(imageBuffer).composite([
   {
