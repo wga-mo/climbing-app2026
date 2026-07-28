@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import ImageViewer from "./ImageViewer";
 
+const topoRequestCache = new Map();
+
 export default function SectorTopo({ sector, sectorId = null }) {
   const [open, setOpen] = useState(false);
   const [imageUrl, setImageUrl] = useState(null);
@@ -18,8 +20,6 @@ export default function SectorTopo({ sector, sectorId = null }) {
   const hasTopo =
     !!sector.sector_in_crag &&
     !!sector.topo_extension;
-
-    const topoRequestCache = new Map();
 
   async function fetchTopo(url, accessToken) {
     const cacheKey = `${url}:${accessToken}`;
@@ -48,11 +48,6 @@ export default function SectorTopo({ sector, sectorId = null }) {
 
           const imageBlob = await response.blob();
 
-          console.log("Topo response:", {
-  url,
-  type: imageBlob.type,
-  size: imageBlob.size,
-});
 
           if (!imageBlob.type.startsWith("image/")) {
             throw new Error("The server did not return a valid image.");
@@ -108,8 +103,6 @@ export default function SectorTopo({ sector, sectorId = null }) {
 
         objectUrl = URL.createObjectURL(imageBlob);
 
-        window.open(objectUrl, "_blank");
-
         if (!cancelled) {
           setImageUrl(objectUrl);
         }
@@ -164,7 +157,6 @@ export default function SectorTopo({ sector, sectorId = null }) {
       </div>
     );
   }
-
 
   return (
     <>

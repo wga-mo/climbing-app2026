@@ -185,10 +185,8 @@ export async function GET(request, { params }) {
     }
 
     const storagePath =
-          `crags/${expectedFolderId}/` +
+      `crags/${expectedFolderId}/` +
       `sector-${sector.sector_in_crag}.${extension}`;
-
-      
 
     const { data: topoBlob, error: downloadError } =
       await adminClient.storage
@@ -208,7 +206,6 @@ export async function GET(request, { params }) {
       );
     }
 
-    
     const originalImage = Buffer.from(
       await topoBlob.arrayBuffer()
     );
@@ -226,7 +223,7 @@ export async function GET(request, { params }) {
         "Content-Type": getContentType(outputMetadata.format),
         "Content-Length": String(watermarkedImage.length),
         "Content-Disposition": "inline",
-        "Cache-Control": "private, no-store",
+        "Cache-Control": "private, max-age=3600",
         "X-Content-Type-Options": "nosniff",
         Vary: "Authorization",
       },
