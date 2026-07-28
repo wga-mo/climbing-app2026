@@ -6,12 +6,24 @@ import CragDetailsContent from "@/components/CragDetailsContent";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/context/AuthContext";
 import { getDatabaseSources } from "@/utils/getDatabaseSources";
+import { trackEvent } from "@/utils/analytics/trackEvent";
 
 // Used in 
 // - crag/page.js
 // - crag/xxx/sector/page.js
 export default function CragDetailsClient({ cragId, sectorId = null }) {
   const [crag, setCrag] = useState(null);
+  useEffect(() => {
+    if (!crag?.crag_id) {
+      return;
+    }
+
+    trackEvent("crag_view", {
+      cragId: crag.crag_id,
+    });
+  }, [crag?.crag_id]);
+
+  
   const [sectors, setSectors] = useState([]);
   const [allSectors, setAllSectors] = useState([]);
   const [routes, setRoutes] = useState([]);
