@@ -1,10 +1,16 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
 
+import {
+  getAuthenticatedUserId,
+  getProfileData,
+} from "@/lib/server/auth";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+const supabaseUrl =
+  process.env.NEXT_PUBLIC_SUPABASE_URL;
+
+const supabaseAnonKey =
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
 const ALLOWED_EVENTS = new Set([
   "home_view",
@@ -47,7 +53,8 @@ function cleanInteger(value) {
 
   const parsed = Number(value);
 
-  return Number.isInteger(parsed) && parsed > 0
+  return Number.isInteger(parsed) &&
+    parsed > 0
     ? parsed
     : null;
 }
@@ -88,7 +95,9 @@ function cleanPagePath(value) {
 
   const path = value.slice(0, 500);
 
-  return path.startsWith("/") ? path : null;
+  return path.startsWith("/")
+    ? path
+    : null;
 }
 
 function cleanProperties(value) {
@@ -107,92 +116,6 @@ function cleanProperties(value) {
   }
 
   return value;
-}
-
-async function getAuthenticatedUserId(request) {
-  const authorization =
-    request.headers.get("authorization");
-
-  if (!authorization?.startsWith("Bearer ")) {
-    return null;
-  }
-
-  const accessToken = authorization
-    .slice("Bearer ".length)
-    .trim();
-
-  if (!accessToken) {
-    return null;
-  }
-
-  const authClient = createClient(
-    supabaseUrl,
-    supabaseAnonKey,
-    {
-      auth: {
-        persistSession: false,
-        autoRefreshToken: false,
-        detectSessionInUrl: false,
-      },
-    }
-  );
-
-  const {
-    data: { user },
-    error,
-  } = await authClient.auth.getUser(accessToken);
-
-  if (error) {
-    if (process.env.NODE_ENV === "development") {
-      console.warn(
-        "Analytics authentication failed:",
-        error
-      );
-    }
-
-    return null;
-  }
-
-  return user?.id ?? null;
-}
-
-async function getProfileData(userId) {
-  if (!userId) {
-    return {
-      isAdmin: false,
-      username: null,
-    };
-  }
-
-  const { data: profile, error } =
-    await supabaseAdmin
-      .from("profiles")
-      .select("is_admin, username")
-      .eq("id", userId)
-      .maybeSingle();
-
-  if (error) {
-    console.error(
-      "Analytics profile lookup failed:",
-      error
-    );
-
-    return {
-      isAdmin: false,
-      username: null,
-    };
-  }
-
-  const username =
-    typeof profile?.username === "string" &&
-    profile.username.trim()
-      ? profile.username.trim().slice(0, 255)
-      : null;
-
-  return {
-    isAdmin: profile?.is_admin === true,
-    username,
-  };
 }
 
 function createDedupeKey({
@@ -231,7 +154,10 @@ export async function POST(request) {
       );
 
       return NextResponse.json(
-        { error: "Server configuration error" },
+        {
+          error:
+            "Server configuration error",
+        },
         { status: 500 }
       );
     }
@@ -244,7 +170,10 @@ export async function POST(request) {
       !ALLOWED_EVENTS.has(eventName)
     ) {
       return NextResponse.json(
-        { error: "Unsupported analytics event" },
+        {
+          error:
+            "Unsupported analytics event",
+        },
         { status: 400 }
       );
     }
@@ -260,16 +189,23 @@ export async function POST(request) {
       );
     }
 
-    const cragId = cleanInteger(body.cragId);
-    const sectorId = cleanInteger(body.sectorId);
-    const routeId = cleanInteger(body.routeId);
+    const cragId =
+      cleanInteger(body.cragId);
 
-    const anonymousId = cleanUuid(
-      body.anonymousId
-    );
+    const sectorId =
+      cleanInteger(body.sectorId);
 
-    const sessionId = cleanUuid(body.sessionId);
-    const hostname = cleanHostname(body.hostname);
+    const routeId =
+      cleanInteger(body.routeId);
+
+    const anonymousId =
+      cleanUuid(body.anonymousId);
+
+    const sessionId =
+      cleanUuid(body.sessionId);
+
+    const hostname =
+      cleanHostname(body.hostname);
 
     const userId =
       await getAuthenticatedUserId(request);
@@ -284,7 +220,10 @@ export async function POST(request) {
       );
     }
 
-    const { isAdmin, username } = await getProfileData(userId);
+    const {
+      isAdmin,
+      username,
+    } = await getProfileData(userId);
 
     const event = {
       event_name: eventName,
@@ -294,13 +233,13 @@ export async function POST(request) {
       anonymous_id: anonymousId,
       session_id: sessionId,
       hostname,
-      page_path: cleanPagePath(body.pagePath),
+      page_path:
+        cleanPagePath(body.pagePath),
       crag_id: cragId,
       sector_id: sectorId,
       route_id: routeId,
-      properties: cleanProperties(
-        body.properties
-      ),
+      properties:
+        cleanProperties(body.properties),
       dedupe_key: null,
     };
 
@@ -358,7 +297,10 @@ export async function POST(request) {
     );
 
     return NextResponse.json(
-      { error: "Invalid analytics request" },
+      {
+        error:
+          "Invalid analytics request",
+      },
       { status: 400 }
     );
   }
