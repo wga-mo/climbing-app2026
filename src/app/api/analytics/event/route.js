@@ -4,6 +4,7 @@ import {
   getAuthenticatedUserId,
   getProfileData,
 } from "@/lib/server/auth";
+
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
 const supabaseUrl =

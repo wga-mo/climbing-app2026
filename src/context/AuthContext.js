@@ -23,7 +23,7 @@ export function AuthProvider({ children }) {
 
       const { data: profileData } = await supabase
         .from("profiles")
-        .select("username")
+        .select("username, is_admin")
         .eq("id", data.user.id)
         .single();
 
@@ -35,28 +35,28 @@ export function AuthProvider({ children }) {
     loadUser();
 
     const {
-  data: { subscription },
-} = supabase.auth.onAuthStateChange((_, session) => {
-  const currentUser = session?.user ?? null;
+      data: { subscription },
+        } = supabase.auth.onAuthStateChange((_, session) => {
+          const currentUser = session?.user ?? null;
 
-  setUser(currentUser);
-  setLoading(false);
+          setUser(currentUser);
+          setLoading(false);
 
-  if (!currentUser) {
-    setProfile(null);
-    return;
-  }
+          if (!currentUser) {
+            setProfile(null);
+            return;
+          }
 
-  setTimeout(async () => {
-    const { data: profileData } = await supabase
-      .from("profiles")
-      .select("username, is_admin")
-      .eq("id", currentUser.id)
-      .single();
+          setTimeout(async () => {
+            const { data: profileData } = await supabase
+              .from("profiles")
+              .select("username, is_admin")
+              .eq("id", currentUser.id)
+              .single();
 
-    setProfile(profileData);
-  }, 0);
-});
+            setProfile(profileData);
+          }, 0);
+        });
 
 return () => subscription.unsubscribe();
   }, []);
