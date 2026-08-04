@@ -59,13 +59,15 @@ export default function FiltersSidebar({ filters, setFilters, mobile = false, mo
   }, []);
 
   function handleRegionChange(regionValue) {
-    setFilters(prev => {
-      const selectedRegions = prev.selectedRegions || [];
+    setFilters((current) => {
+      const selectedRegions = current.selectedRegions ?? [];
 
       return {
-        ...prev,
+        ...current,
         selectedRegions: selectedRegions.includes(regionValue)
-          ? selectedRegions.filter(region => region !== regionValue)
+          ? selectedRegions.filter(
+              (region) => region !== regionValue
+            )
           : [...selectedRegions, regionValue],
       };
     });

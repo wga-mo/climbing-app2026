@@ -22,6 +22,19 @@ export default function HomePage() {
   const { crags, loading } = useCrags(filters);
   const [activeCragId, setActiveCragId] = useState(null);
 
+  useEffect(() => {
+    if (
+      filters.selectedRegions?.length === 0 &&
+      activeMobileView === "map"
+    ) {
+      setActiveMobileView("table");
+    }
+  }, [
+    filters.selectedRegions,
+    activeMobileView,
+    setActiveMobileView,
+  ]);
+
   const markers = useMemo(
     () =>
       crags
@@ -59,18 +72,20 @@ export default function HomePage() {
         />
       </section>
 
-      <section className="w-[45%] min-w-[500px] border-l p-4">
-        {loading ? (
-          <div className="h-[calc(100vh-6rem)] w-full rounded border bg-gray-50" />
-        ) : (
-          <MapView
-            markers={markers}
-            activeMarkerId={activeCragId}
-            setActiveMarkerId={setActiveCragId}
-            mode="main"
-          />
-        )}
-      </section>
+      {filters.selectedRegions?.length > 0 && (
+        <section className="w-[45%] min-w-[500px] border-l p-4">
+          {loading ? (
+            <div className="h-[calc(100vh-6rem)] w-full rounded border bg-gray-50" />
+          ) : (
+            <MapView
+              markers={markers}
+              activeMarkerId={activeCragId}
+              setActiveMarkerId={setActiveCragId}
+              mode="main"
+            />
+          )}
+        </section>
+      )}
     </main>
 
     {/* Mobile layout */}
@@ -101,7 +116,7 @@ export default function HomePage() {
     </main>
 
     {/* Mobile table/map toggle */}
-    {!mobileFiltersVisible && (
+    {!mobileFiltersVisible && filters.selectedRegions?.length > 0 && (
       <button
         onClick={() =>
           setActiveMobileView(prev =>

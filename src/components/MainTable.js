@@ -60,6 +60,7 @@ export default function MainTable({ crags, loading, activeCragId, setActiveCragI
 
 
   return (
+    
     <div className="w-full">
 
       <input
@@ -75,7 +76,16 @@ export default function MainTable({ crags, loading, activeCragId, setActiveCragI
         className="mb-3 w-full rounded border px-3 py-2 text-sm"
       />
 
-      {!crags.length ? (
+      {filters.selectedRegions?.length === 0 ? (
+        <div className="py-12 text-center text-gray-500">
+          <p className="font-semibold text-gray-700">
+            No regions selected.
+          </p>
+          <p className="mt-2">
+            Select one or more regions in the filter panel to display crags.
+          </p>
+        </div>
+      ) : !crags.length ? (
         <p>No crags found.</p>
       ) : (
         <table className="w-full table-fixed border-collapse text-sm text-center">
