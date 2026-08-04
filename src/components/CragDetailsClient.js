@@ -45,6 +45,23 @@ export default function CragDetailsClient({ cragId, sectorId = null }) {
   }, [cragId, sectorId]);
 
   useEffect(() => {
+    if (!crag?.crag_name) return;
+
+    if (sectorId) {
+      if (!currentSector?.name) return;
+
+      document.title =
+        `${crag.crag_name} - ${currentSector.name}`;
+    } else {
+      document.title = crag.crag_name;
+    }
+  }, [
+    crag?.crag_name,
+    currentSector?.name,
+    sectorId,
+  ]);
+
+  useEffect(() => {
     if (authLoading) return;
 
     async function fetchDetails() {

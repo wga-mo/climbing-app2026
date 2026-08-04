@@ -15,6 +15,7 @@ const MapView = dynamic(() => import("@/components/MapView"), {
 
 export default function HomePage() {
   useEffect(() => {
+    document.title = "Home";
     trackEvent("home_view");
   }, []);
 
