@@ -64,29 +64,46 @@ function getMarkerIcon(marker) {
   });
 }
 
+function getContentPositions(markers, paths) {
+  return [
+    ...markers.map(marker => [
+      Number(marker.lat),
+      Number(marker.lng),
+    ]),
+    ...paths.flatMap(path => path.positions),
+  ].filter(
+    position =>
+      Number.isFinite(position[0]) &&
+      Number.isFinite(position[1])
+  );
+}
+
+function fitMapToPositions(map, positions) {
+  if (positions.length === 0) return;
+
+  if (positions.length === 1) {
+    map.setView(positions[0], 12);
+    return;
+  }
+
+  map.fitBounds(L.latLngBounds(positions), {
+    padding: [40, 40],
+    maxZoom: 12,
+  });
+}
+
 function FitMapToContent({ markers, paths }) {
   const map = useMap();
 
+  const positionsKey = JSON.stringify(
+    getContentPositions(markers, paths)
+  );
+
   useEffect(() => {
-    const positions = [
-      ...markers.map(marker => [marker.lat, marker.lng]),
-      ...paths.flatMap(path => path.positions),
-    ];
+    const positions = JSON.parse(positionsKey);
 
-    if (positions.length === 0) return;
-
-    if (positions.length === 1) {
-      map.setView(positions[0], 12);
-      return;
-    }
-
-    const bounds = L.latLngBounds(positions);
-
-    map.fitBounds(bounds, {
-      padding: [40, 40],
-      maxZoom: 15,
-    });
-  }, [markers, paths, map]);
+    fitMapToPositions(map, positions);
+  }, [map, positionsKey]);
 
   return null;
 }
@@ -226,6 +243,76 @@ function getLocationButtonLabel(marker) {
   }
 
   return marker.label || marker.type || "Location";
+}
+
+function RecenterControl({
+  markers,
+  paths,
+  position = "topleft",
+}) {
+  const map = useMap();
+
+  const positionsKey = JSON.stringify(
+    getContentPositions(markers, paths)
+  );
+
+  useEffect(() => {
+    const RecenterLeafletControl = L.Control.extend({
+      options: {
+        position,
+      },
+
+      onAdd() {
+        const container = L.DomUtil.create(
+          "div",
+          "leaflet-bar leaflet-control"
+        );
+
+        const button = L.DomUtil.create(
+          "button",
+          "",
+          container
+        );
+
+        button.type = "button";
+        button.title = "Recenter map";
+        button.setAttribute("aria-label", "Recenter map");
+        button.innerHTML = "Recenter";
+
+        Object.assign(button.style, {
+          width: "90px",
+          height: "34px",
+          background: "white",
+          border: "none",
+          cursor: "pointer",
+          fontSize: "22px",
+          lineHeight: "34px",
+        });
+
+        L.DomEvent.disableClickPropagation(container);
+        L.DomEvent.disableScrollPropagation(container);
+
+        L.DomEvent.on(button, "click", event => {
+          L.DomEvent.stop(event);
+
+          const positions = JSON.parse(positionsKey);
+
+          fitMapToPositions(map, positions);
+        });
+
+        return container;
+      },
+    });
+
+    const control = new RecenterLeafletControl();
+    control.addTo(map);
+
+    return () => {
+      control.remove();
+    };
+  }, [map, position, positionsKey]);
+
+  return null;
 }
 
 export default function MapView({
@@ -573,7 +660,6 @@ export default function MapView({
         zoomControl={false}
         scrollWheelZoom
         className="h-full w-full"
-        
       >
         <ResizeMap />
 
@@ -696,8 +782,11 @@ export default function MapView({
           </Marker>
         ))}
 
-       
-          </MapContainer>
+        <RecenterControl
+          markers={visibleMarkers}
+          paths={visiblePaths}
+        />
+      </MapContainer>
     </div>
   );
 }

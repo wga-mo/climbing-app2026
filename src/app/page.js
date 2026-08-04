@@ -2,7 +2,7 @@
 
 import { useFilters } from "@/context/FiltersContext";
 import { useCrags } from "@/hooks/useCrags";
-import { useEffect, useState } from "react";
+import { useMemo, useEffect, useState } from "react";
 import FiltersSidebar from "@/components/FiltersSidebar";
 import MainTable from "@/components/MainTable";
 import { trackEvent } from "@/utils/analytics/trackEvent";
@@ -22,16 +22,24 @@ export default function HomePage() {
   const { crags, loading } = useCrags(filters);
   const [activeCragId, setActiveCragId] = useState(null);
 
-  const markers = crags
-  .filter(crag => crag.location?.lat && crag.location?.lng)
-  .map(crag => ({
-    id: crag.crag_id,
-    label: crag.crag_name,
-    lat: crag.location.lat,
-    lng: crag.location.lng,
-    type: "crag",
-    href: `/crag/${crag.crag_id}`,
-  }));
+  const markers = useMemo(
+    () =>
+      crags
+        .filter(
+          crag =>
+            crag.location?.lat &&
+            crag.location?.lng
+        )
+        .map(crag => ({
+          id: crag.crag_id,
+          label: crag.crag_name,
+          lat: crag.location.lat,
+          lng: crag.location.lng,
+          type: "crag",
+          href: `/crag/${crag.crag_id}`,
+        })),
+    [crags]
+  );
 
   return (
   <>
