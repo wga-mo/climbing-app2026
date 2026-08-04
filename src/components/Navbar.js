@@ -131,6 +131,16 @@ export default function Navbar() {
                     My ticks
                   </Link>
 
+                  {profile?.is_admin && (
+                    <Link
+                      href="/admin"
+                      className="block px-3 py-2 text-sm hover:bg-gray-100"
+                      onClick={() => setMenuOpen(false)}
+                    >
+                      Administration
+                    </Link>
+                  )}
+
                   <button
                     onClick={handleLogout}
                     className="block w-full px-3 py-2 text-left text-sm hover:bg-gray-100"
@@ -182,6 +192,16 @@ export default function Navbar() {
                   >
                     My ticks
                   </Link>
+
+                  {profile?.is_admin && (
+                    <Link
+                      href="/admin"
+                      className="block px-3 py-2 text-sm hover:bg-gray-100"
+                      onClick={() => setMenuOpen(false)}
+                    >
+                      Administration
+                    </Link>
+                  )}
                 </div>
               )}
               <button
