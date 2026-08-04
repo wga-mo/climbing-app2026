@@ -28,14 +28,31 @@ export default function FiltersSidebar({ filters, setFilters, mobile = false, mo
         return;
       }
 
-      const unique = [...new Set(data.map(r => r.region))];
+      const unique = [
+        ...new Set(
+          data
+            .map((row) => row.region)
+            .filter(Boolean)
+        ),
+      ];
 
-      setRegionOptions(
-        unique.map(region => ({
-          label: region,
-          value: region,
-        }))
-      );
+      const options = unique.map((region) => ({
+        label: region,
+        value: region,
+      }));
+
+      setRegionOptions(options);
+
+      setFilters((current) => {
+        if (current.selectedRegions !== null) {
+          return current;
+        }
+
+        return {
+          ...current,
+          selectedRegions: unique,
+        };
+      });
     }
 
     loadRegions();

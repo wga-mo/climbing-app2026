@@ -18,7 +18,7 @@ export const defaultFilters = {
   p_m: false,
   d_time: 120,
   w_time: 45,
-  selectedRegions: [],
+  selectedRegions: null,
   sortColumn: "total_routes",
   sortDirection: "desc",
   searchText: "",
@@ -48,12 +48,12 @@ export function FiltersProvider({ children }) {
           selectedRegions:
             parsedFilters.selectedRegions !== undefined
               ? parsedFilters.selectedRegions
-              : allowedRegions ?? [],
+              : allowedRegions,
         });
       } else {
         setFilters({
           ...defaultFilters,
-          selectedRegions: allowedRegions ?? [],
+          selectedRegions: allowedRegions,
         });
       }
     } catch (error) {
@@ -63,7 +63,7 @@ export function FiltersProvider({ children }) {
 
       setFilters({
         ...defaultFilters,
-        selectedRegions: allowedRegions ?? [],
+        selectedRegions: allowedRegions,
       });
     } finally {
       setFiltersLoaded(true);
