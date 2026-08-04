@@ -3,6 +3,7 @@ import { useFilters } from "@/context/FiltersContext";
 import { hostnameCrags } from "@/utils/hostnameCrags";
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
+import * as Slider from "@radix-ui/react-slider";
 
 export default function FiltersSidebar({ filters, setFilters, mobile = false, mode="main" }) {
 
@@ -207,37 +208,35 @@ export default function FiltersSidebar({ filters, setFilters, mobile = false, mo
             />
           </div>
 
-          <div className="relative mt-4 h-6">
-            {/* Gray background line */}
-            <div className="absolute top-1/2 h-1 w-full -translate-y-1/2 rounded bg-gray-200" />
+          <Slider.Root
+            min={1}
+            max={37}
+            step={1}
+            value={[filters.gradeMin, filters.gradeMax]}
+            minStepsBetweenThumbs={1}
+            onValueChange={([gradeMin, gradeMax]) =>
+              setFilters((current) => ({
+                ...current,
+                gradeMin,
+                gradeMax,
+              }))
+            }
+            className="relative mt-4 flex h-11 w-full touch-none select-none items-center"
+          >
+            <Slider.Track className="relative h-1 w-full grow rounded-full bg-gray-200">
+              <Slider.Range className="absolute h-full rounded-full bg-black" />
+            </Slider.Track>
 
-            {/* Black selected range */}
-            <div
-              className="absolute top-1/2 h-1 -translate-y-1/2 rounded bg-black"
-              style={{
-                left: `${(filters.gradeMin / 37) * 100}%`,
-                width: `${((filters.gradeMax - filters.gradeMin) / 37) * 100}%`,
-              }}
+            <Slider.Thumb
+              aria-label="Minimum grade"
+              className="block h-5 w-5 cursor-grab rounded-full bg-black shadow-sm outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 active:cursor-grabbing"
             />
 
-            <input
-              type="range"
-              min="1"
-              max="37"
-              value={filters.gradeMin}
-              onChange={handleGradeMinChange}
-              className="range-thumb pointer-events-none absolute top-1/2 w-full -translate-y-1/2 appearance-none bg-transparent"
+            <Slider.Thumb
+              aria-label="Maximum grade"
+              className="block h-5 w-5 cursor-grab rounded-full bg-black shadow-sm outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 active:cursor-grabbing"
             />
-
-            <input
-              type="range"
-              min="1"
-              max="37"
-              value={filters.gradeMax}
-              onChange={handleGradeMaxChange}
-              className="range-thumb pointer-events-none absolute top-1/2 w-full -translate-y-1/2 appearance-none bg-transparent"
-            />
-          </div>
+          </Slider.Root>
 
           <label className="mt-2 flex items-center gap-2 text-sm">
             <input
@@ -321,30 +320,28 @@ export default function FiltersSidebar({ filters, setFilters, mobile = false, mo
 
           <p className="mt-2 text-sm">{filters.d_time} minutes</p>
 
-          <div className="relative mt-3 h-6">
+         <Slider.Root
+            min={0}
+            max={300}
+            step={15}
+            value={[filters.d_time]}
+            onValueChange={([value]) =>
+              setFilters((current) => ({
+                ...current,
+                d_time: value,
+              }))
+            }
+            className="relative mt-3 flex h-11 w-full touch-none select-none items-center"
+          >
+            <Slider.Track className="relative h-1 w-full grow rounded-full bg-gray-300">
+              <Slider.Range className="absolute h-full rounded-full bg-black" />
+            </Slider.Track>
 
-            {/* Gray background */}
-            <div className="absolute top-1/2 h-1 w-full -translate-y-1/2 rounded bg-gray-300" />
-
-            {/* Black filled part */}
-            <div
-              className="absolute top-1/2 h-1 -translate-y-1/2 rounded bg-black"
-              style={{
-                width: `${(filters.d_time / 300) * 100}%`,
-              }}
+            <Slider.Thumb
+              aria-label="Maximum driving time"
+              className="block h-5 w-5 cursor-grab rounded-full bg-black shadow-sm outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 active:cursor-grabbing"
             />
-
-            <input
-              type="range"
-              name="d_time"
-              min="0"
-              max="300"
-              step="15"
-              value={filters.d_time}
-              onChange={handleNumberChange}
-              className="black-slider absolute top-1/2 w-full -translate-y-1/2"
-            />
-          </div>
+          </Slider.Root>
         </section>
 
         {/* Walking time filter */}
@@ -353,28 +350,28 @@ export default function FiltersSidebar({ filters, setFilters, mobile = false, mo
 
           <p className="mt-2 text-sm">{filters.w_time} minutes</p>
 
-          <div className="relative mt-3 h-6">
+          <Slider.Root
+            min={0}
+            max={180}
+            step={5}
+            value={[filters.w_time]}
+            onValueChange={([value]) =>
+              setFilters((current) => ({
+                ...current,
+                w_time: value,
+              }))
+            }
+            className="relative mt-3 flex h-11 w-full touch-none select-none items-center"
+          >
+            <Slider.Track className="relative h-1 w-full grow rounded-full bg-gray-300">
+              <Slider.Range className="absolute h-full rounded-full bg-black" />
+            </Slider.Track>
 
-            <div className="absolute top-1/2 h-1 w-full -translate-y-1/2 rounded bg-gray-300" />
-
-            <div
-              className="absolute top-1/2 h-1 -translate-y-1/2 rounded bg-black"
-              style={{
-                width: `${(filters.w_time / 180) * 100}%`,
-              }}
+            <Slider.Thumb
+              aria-label="Maximum walking time"
+              className="block h-5 w-5 cursor-grab rounded-full bg-black shadow-sm outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 active:cursor-grabbing"
             />
-
-            <input
-              type="range"
-              name="w_time"
-              min="0"
-              max="180"
-              step="5"
-              value={filters.w_time}
-              onChange={handleNumberChange}
-              className="black-slider absolute top-1/2 w-full -translate-y-1/2"
-            />
-          </div>
+          </Slider.Root>
         </section>
       </div>
         
